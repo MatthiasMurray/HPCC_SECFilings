@@ -1,5 +1,4 @@
-IMPORT EDGAR_Example;
-IMPORT * FROM EDGAR_Example;
+IMPORT * FROM EDGAR_Extract;
 
 path := '~ncf::edgarfilings::raw::aapl_20190928_10k_blob';
 
