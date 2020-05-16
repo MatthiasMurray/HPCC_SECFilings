@@ -1,19 +1,16 @@
 xflat := DATASET('~ncf::edgarfilings::raw::aapl_20180929.xml',{STRING10000 words},CSV);
 pattern alpha := PATTERN('[A-Za-zA-Za-z]')+;
-pattern tag   := PATTERN('[-\t a-zA-Z]')+;
-pattern tabs  := PATTERN('[\t]')+;
+pattern tag   := PATTERN('[-\t a-zA-Z]')+ NOT IN ['xbrli','xbrldi'];
 pattern typ   := alpha;
 pattern ws    := PATTERN(' ');
-//pattern doctag:='<dei:' typ ws;
-//RULE docstart :=doctag;
-pattern maintag:=OPT(ws+) OPT(tabs)'<' tag ':' typ ws;
+
+pattern maintag:='<' tag ':' typ ws;
 rule opentag:=maintag;
-//pattern aapltag:='<aapl:' typ ws;
-//rule aapl:=aapltag;
 
 outrec := RECORD
     STRING Opener:=MATCHTEXT(maintag/tag);
     STRING DocumentType:=MATCHTEXT(maintag/typ);
 END;
 
-EXPORT ParseXMLtags := PARSE(xflat,words,opentag,outrec,SCAN ALL,KEEP(1000));
+ParseXMLtags := PARSE(xflat,words,opentag,outrec,SCAN ALL);
+OUTPUT(CHOOSEN(DEDUP(ParseXMLtags,ALL),ALL));
