@@ -1,5 +1,5 @@
-<Cache hash="165262674545036269">
-<Attr name="test_extract">
+<Cache hash="212830741268194921">
+<Attr name="text_parse_test">
  <Depend module="EDGAR_Extract" name="text_tools"/>
 </Attr>
 </Cache>

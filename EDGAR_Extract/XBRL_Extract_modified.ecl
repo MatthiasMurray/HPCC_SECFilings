@@ -11,7 +11,7 @@ EXPORT XBRL_Extract_modified := MODULE
     SELF.decimals   := XMLUNICODE('@decimals');
     SELF.content    := XMLUNICODE('');
   END;
-
+  
   Extract_Layout_modified.Main cvt(RECORDOF(ds) lr) := TRANSFORM
     SELF.fileName         := lr.fileName;
     SELF.filingType       := XMLUNICODE('dei:DocumentType');
@@ -46,5 +46,4 @@ EXPORT XBRL_Extract_modified := MODULE
   END;
 
   EXPORT File(STRING fileName) := PARSE(ds(fileName), text, cvt(LEFT), XML('xbrl'));
-
 END;
