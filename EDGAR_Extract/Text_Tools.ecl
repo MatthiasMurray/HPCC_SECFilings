@@ -8,6 +8,8 @@ EXPORT Text_Tools := MODULE
         F := DATASET([{File}],rec1);
 
         pattern mess   := ANY NOT IN ['<','>'];
+        pattern fmttag := '<' mess+ '>';
+        pattern fmtend := '</' mess+ '>';
         pattern divtag := '<div ' mess+ '>';
         pattern spntag := '<span ' mess+ '>';
         pattern divend := '</div>';
@@ -15,10 +17,11 @@ EXPORT Text_Tools := MODULE
         pattern txtblk := (ANY NOT IN ['<','>'])+;
         pattern blktop := txtblk;
         pattern divpat := divtag spntag txtblk spnend divend;
-        rule txtblock  := divpat;
+        pattern fmtpat := OPT(fmttag) OPT(fmttag) OPT(fmttag) OPT(fmttag) txtblk OPT(fmtend) OPT(fmtend) OPT(fmtend) OPT(fmtend);
+        rule txtblock  := fmtpat;//divpat;
 
         outrec := RECORD
-            STRING text := MATCHTEXT(divpat/txtblk);
+            STRING text := MATCHTEXT(fmtpat/txtblk);//MATCHTEXT(divpat/txtblk);
         END;
 
         casheqparse := PARSE(F,content,txtblock,outrec,SCAN ALL);
@@ -58,7 +61,14 @@ EXPORT Text_Tools := MODULE
             SELF.contextRef := lr.contextRef;
             SELF.unitRef    := lr.unitRef;
             SELF.decimals   := lr.decimals;
-            SELF.content    := IF(lr.element = 'us-gaap:CashAndCashEquivalentsPolicyTextBlock',Concat(CashParse(lr.content)),lr.content);
+            SELF.content    := IF(lr.element IN //['us-gaap:CashAndCashEquivalentsPolicyTextBlock',
+                                                //'us-gaap:CommitmentsAndContingenciesDisclosureTextBlock',
+                                                ['us-gaap:BasisOfPresentationAndSignificantAccountingPoliciesTextBlock'],
+                                                //'us-gaap:AdditionalFinancialInformationTextBlock'],
+                                                //'us-gaap:QuarterlyFinancialInformationTextBlock'],
+                                    Concat(CashParse(lr.content)),
+                                    lr.content);
+            //SELF.content    := IF(lr.element = 'us-gaap:CashAndCashEquivalentsPolicyTextBlock',Concat(CashParse(lr.content)),lr.content);
         END;
 
         RECORDOF(File) cvthtml(RECORDOF(File) lr) := TRANSFORM
