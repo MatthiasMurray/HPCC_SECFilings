@@ -10,18 +10,12 @@ EXPORT Text_Tools := MODULE
         pattern mess   := ANY NOT IN ['<','>'];
         pattern fmttag := '<' mess+ '>';
         pattern fmtend := '</' mess+ '>';
-        pattern divtag := '<div ' mess+ '>';
-        pattern spntag := '<span ' mess+ '>';
-        pattern divend := '</div>';
-        pattern spnend := '</span>';
         pattern txtblk := (ANY NOT IN ['<','>'])+;
-        pattern blktop := txtblk;
-        pattern divpat := divtag spntag txtblk spnend divend;
         pattern fmtpat := OPT(fmttag) OPT(fmttag) OPT(fmttag) OPT(fmttag) txtblk OPT(fmtend) OPT(fmtend) OPT(fmtend) OPT(fmtend);
-        rule txtblock  := fmtpat;//divpat;
+        rule txtblock  := fmtpat;
 
         outrec := RECORD
-            STRING text := MATCHTEXT(fmtpat/txtblk);//MATCHTEXT(divpat/txtblk);
+            STRING text := MATCHTEXT(fmtpat/txtblk);
         END;
 
         casheqparse := PARSE(F,content,txtblock,outrec,SCAN ALL);
@@ -61,14 +55,13 @@ EXPORT Text_Tools := MODULE
             SELF.contextRef := lr.contextRef;
             SELF.unitRef    := lr.unitRef;
             SELF.decimals   := lr.decimals;
-            SELF.content    := IF(lr.element IN //['us-gaap:CashAndCashEquivalentsPolicyTextBlock',
-                                                //'us-gaap:CommitmentsAndContingenciesDisclosureTextBlock',
-                                                ['us-gaap:BasisOfPresentationAndSignificantAccountingPoliciesTextBlock'],
-                                                //'us-gaap:AdditionalFinancialInformationTextBlock'],
-                                                //'us-gaap:QuarterlyFinancialInformationTextBlock'],
+            SELF.content    := IF(lr.element IN ['us-gaap:CashAndCashEquivalentsPolicyTextBlock',
+                                                'us-gaap:CommitmentsAndContingenciesDisclosureTextBlock',
+                                                'us-gaap:BasisOfPresentationAndSignificantAccountingPoliciesTextBlock',
+                                                'us-gaap:AdditionalFinancialInformationTextBlock',
+                                                'us-gaap:QuarterlyFinancialInformationTextBlock'],
                                     Concat(CashParse(lr.content)),
                                     lr.content);
-            //SELF.content    := IF(lr.element = 'us-gaap:CashAndCashEquivalentsPolicyTextBlock',Concat(CashParse(lr.content)),lr.content);
         END;
 
         RECORDOF(File) cvthtml(RECORDOF(File) lr) := TRANSFORM
@@ -95,10 +88,29 @@ EXPORT Text_Tools := MODULE
             SELF.accessionNumber  := 'N/A';    // only classic EDGAR
             SELF.values           := PROJECT(lr.values,fixHTML(LEFT));
         END;
-
+        
         Final := PROJECT(File,cvthtml(LEFT));
 
         RETURN Final;
     END;
-    
+    EXPORT sep_sents(STRING inString) := FUNCTION
+        pattern endpunct := ['.','?','!'];
+        pattern ws       := ' ';
+        pattern mess     := (ANY NOT IN endpunct)+;
+        pattern sentence := mess endpunct;
+        rule    nicesent := sentence;
+
+        inrec  := RECORD
+            STRING text;
+        END;
+
+        F := DATASET([{inString}],inrec);
+
+        outrec := RECORD
+            STRING sentence := MATCHTEXT(sentence);
+        END;
+
+        sentparse := PARSE(F,text,nicesent,outrec,SCAN ALL);
+        RETURN sentparse;
+    END;
 END;
