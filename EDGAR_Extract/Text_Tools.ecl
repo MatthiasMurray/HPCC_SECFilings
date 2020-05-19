@@ -1,7 +1,7 @@
 IMPORT * FROM EDGAR_Extract;
 
 EXPORT Text_Tools := MODULE
-
+    
     EXPORT CashParse(UNICODE File) := FUNCTION
 
         rec1 := {UNICODE content};
@@ -105,12 +105,33 @@ EXPORT Text_Tools := MODULE
         END;
 
         F := DATASET([{inString}],inrec);
-
-        outrec := RECORD
+        
+        parserec := RECORD
+            UNSIGNED8 ones  := 1;
+            UNSIGNED8 sentId:= 0; 
             STRING sentence := MATCHTEXT(sentence);
         END;
 
-        sentparse := PARSE(F,text,nicesent,outrec,SCAN ALL);
-        RETURN sentparse;
+        sentparse := PARSE(F,text,nicesent,parserec,SCAN);
+        
+        outrec := RECORD
+            UNSIGNED8 ones;
+            UNSIGNED8 sentId;
+            STRING    sentence;
+        END;
+
+        outrec consec(outrec L,outrec R) := TRANSFORM
+            SELF.sentId := L.sentId + R.ones;
+            SELF        := R;
+        END;
+
+        sentlist := ITERATE(sentparse,consec(LEFT,RIGHT));
+
+        finalrec := RECORD
+            sentlist.sentId;
+            sentlist.sentence;
+        END;
+
+        RETURN TABLE(sentlist,finalrec);
     END;
 END;
