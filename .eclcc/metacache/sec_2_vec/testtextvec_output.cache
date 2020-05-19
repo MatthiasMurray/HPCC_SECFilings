@@ -1,8 +1,8 @@
-<Cache hash="165262674545036269">
-<Attr name="testtextvec_output">
+<Cache hash="212830741268194921">
+<Attr module="SEC_2_Vec" name="testtextvec_output">
  <Depend module="EDGAR_Extract" name="text_tools"/>
  <Depend module="TextVectors" name="types"/>
- <Depend module="" name="testtextvec_input"/>
+ <Depend module="SEC_2_Vec" name="secvec_input"/>
  <Depend module="TextVectors" name="sentencevectors"/>
 </Attr>
 </Cache>

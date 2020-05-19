@@ -8,10 +8,11 @@ EXPORT Text_Tools := MODULE
         F := DATASET([{File}],rec1);
 
         pattern mess   := ANY NOT IN ['<','>'];
-        pattern fmttag := '<' mess+ '>';
-        pattern fmtend := '</' mess+ '>';
+        pattern fmttag := '<span' mess+ '>';
+        pattern fmtend := '</span>';// mess+ '>';
         pattern txtblk := (ANY NOT IN ['<','>'])+;
-        pattern fmtpat := OPT(fmttag) OPT(fmttag) OPT(fmttag) OPT(fmttag) txtblk OPT(fmtend) OPT(fmtend) OPT(fmtend) OPT(fmtend);
+        //pattern fmtpat := OPT(fmttag) OPT(fmttag) OPT(fmttag) OPT(fmttag) txtblk OPT(fmtend) OPT(fmtend) OPT(fmtend) OPT(fmtend);
+        pattern fmtpat := fmttag txtblk fmtend;
         rule txtblock  := fmtpat;
 
         outrec := RECORD
@@ -90,7 +91,7 @@ EXPORT Text_Tools := MODULE
         END;
         
         Final := PROJECT(File,cvthtml(LEFT));
-
+        //RETURN File;//For raw text blocks with HTML
         RETURN Final;
     END;
     EXPORT sep_sents(STRING inString) := FUNCTION
@@ -128,8 +129,8 @@ EXPORT Text_Tools := MODULE
         sentlist := ITERATE(sentparse,consec(LEFT,RIGHT));
 
         finalrec := RECORD
-            sentlist.sentId;
-            sentlist.sentence;
+            UNSIGNED8 sentId   := sentlist.sentId;
+            STRING  text := sentlist.sentence;
         END;
 
         RETURN TABLE(sentlist,finalrec);

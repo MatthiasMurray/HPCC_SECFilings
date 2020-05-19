@@ -1,0 +1,5 @@
+<Cache hash="212830741268194921">
+<Attr name="secvec_input">
+ <Depend module="EDGAR_Extract" name="text_tools"/>
+</Attr>
+</Cache>
