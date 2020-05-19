@@ -22,8 +22,8 @@
             "legacyMode": "${config:ecl.legacyMode}",
             "resultLimit": 100,
             "timeoutSecs": 60,
-            "user": cluster_username,
-            "password": cluster_pass
+            "user": "mmat",
+            "password": "L@5mqr$K"
         }
     ]
 }
