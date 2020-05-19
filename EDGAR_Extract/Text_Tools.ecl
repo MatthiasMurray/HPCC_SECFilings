@@ -9,9 +9,8 @@ EXPORT Text_Tools := MODULE
 
         pattern mess   := ANY NOT IN ['<','>'];
         pattern fmttag := '<span' mess+ '>';
-        pattern fmtend := '</span>';// mess+ '>';
+        pattern fmtend := '</span>';
         pattern txtblk := (ANY NOT IN ['<','>'])+;
-        //pattern fmtpat := OPT(fmttag) OPT(fmttag) OPT(fmttag) OPT(fmttag) txtblk OPT(fmtend) OPT(fmtend) OPT(fmtend) OPT(fmtend);
         pattern fmtpat := fmttag txtblk fmtend;
         rule txtblock  := fmtpat;
 
@@ -91,7 +90,6 @@ EXPORT Text_Tools := MODULE
         END;
         
         Final := PROJECT(File,cvthtml(LEFT));
-        //RETURN File;//For raw text blocks with HTML
         RETURN Final;
     END;
     EXPORT sep_sents(STRING inString) := FUNCTION
