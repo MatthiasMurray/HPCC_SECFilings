@@ -1,5 +1,6 @@
 <Cache hash="165262674545036269">
-<Attr module="TextVectors.Internal" name="svtrainnn">
+<Attr name="testtextvec_output">
  <Depend module="TextVectors" name="types"/>
+ <Depend module="TextVectors" name="sentencevectors"/>
 </Attr>
 </Cache>

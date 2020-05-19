@@ -1,10 +1,12 @@
 IMPORT * FROM EDGAR_Extract;
 IMPORT * FROM EDGAR_Extract.Text_Tools;
 
-//wufile := DATASET(WORKUNIT('html_cleaned'),Extract_Layout_modified.Main);
+wufile := DATASET(WORKUNIT('W20200519-172257','cleantext'),Extract_Layout_modified.Main);
 
-//OUTPUT(wufile.values);
+specrow := wufile.values(element='us-gaap:CashAndCashEquivalentsPolicyTextBlock')[1];
 
-sents := 'This is an example sentence. The more words the better!';
+OUTPUT(sep_sents(specrow.content),NAMED('sentences'));
 
-OUTPUT(sep_sents(sents));
+//sents := 'This is an example sentence. The more words the better!';
+
+//OUTPUT(sep_sents(sents));

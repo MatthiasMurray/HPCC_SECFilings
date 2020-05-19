@@ -4,12 +4,12 @@ IMPORT * FROM EDGAR_Extract;
 EXPORT XBRL_Extract_modified := MODULE
   ds(STRING fileName) := Raw_Input_Files.Files(fileName);//, TRUE);   // strip prefix
 
-  Extract_Layout_modified.Entry getEntry(UNICODE element) := TRANSFORM
+  Extract_Layout_modified.Entry_clean getEntry(UNICODE element) := TRANSFORM
     SELF.element    := element;
     SELF.contextRef := XMLUNICODE('@contextRef');
     SELF.unitRef    := XMLUNICODE('@unitRef');
     SELF.decimals   := XMLUNICODE('@decimals');
-    SELF.content    := XMLUNICODE('');
+    SELF.content    := (STRING)XMLUNICODE('');
   END;
   
   Extract_Layout_modified.Main cvt(RECORDOF(ds) lr) := TRANSFORM

@@ -12,6 +12,14 @@ EXPORT Extract_Layout_modified := MODULE
     UNICODE     content;      //the text content of the element
   END;
 
+  EXPORT Entry_clean := RECORD
+    UNICODE     element;      //the element r line tag for classic EDGAR
+    UNICODE     contextRef;   //the contextRef attribute or position data for classic EDGAR
+    UNICODE     unitRef;      //the unitRef attribute or blank for classic EDGAR
+    UNICODE     decimals;     //the decimals attribute or blank for classic EDGAR
+    STRING     content;      //the text content of the element
+  END;
+
   EXPORT Main := RECORD
     STRING      fileName;
     UNICODE     accessionNumber;
@@ -34,6 +42,6 @@ EXPORT Extract_Layout_modified := MODULE
     UNICODE     volfilers;
     UNICODE     currentstat;
     UNICODE     fyend;
-    DATASET(Entry) values;
+    DATASET(Entry_clean) values;
   END;
 END;

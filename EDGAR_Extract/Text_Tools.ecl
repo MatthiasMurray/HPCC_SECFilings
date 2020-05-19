@@ -2,9 +2,9 @@ IMPORT * FROM EDGAR_Extract;
 
 EXPORT Text_Tools := MODULE
     
-    EXPORT CashParse(UNICODE File) := FUNCTION
+    EXPORT CashParse(STRING File) := FUNCTION
 
-        rec1 := {UNICODE content};
+        rec1 := {STRING content};
         F := DATASET([{File}],rec1);
 
         pattern mess   := ANY NOT IN ['<','>'];
@@ -18,7 +18,7 @@ EXPORT Text_Tools := MODULE
             STRING text := MATCHTEXT(fmtpat/txtblk);
         END;
 
-        casheqparse := PARSE(F,content,txtblock,outrec,SCAN ALL);
+        casheqparse := PARSE(F,content,txtblock,outrec,SCAN);
         RETURN casheqparse;
     END;
     rec2 := RECORD
@@ -34,7 +34,7 @@ EXPORT Text_Tools := MODULE
         txtconcat := ROLLUP(File,TRUE,MakeStringRec(LEFT,RIGHT,kDelimiter));
         RETURN txtconcat[1].text;
     END;
-    EXPORT FixTextBlock(DATASET(Extract_Layout_modified.Entry) ent) := FUNCTION
+    EXPORT FixTextBlock(DATASET(Extract_Layout_modified.Entry_clean) ent) := FUNCTION
       
       outrec := RECORD
           UNICODE element := ent.element;
@@ -50,7 +50,7 @@ EXPORT Text_Tools := MODULE
     EXPORT XBRL_HTML_File(STRING fileName) := FUNCTION
         File := XBRL_Extract_modified.File(fileName);
         
-        Extract_Layout_modified.Entry fixHTML(Extract_Layout_modified.Entry lr) := TRANSFORM
+        Extract_Layout_modified.Entry_clean fixHTML(Extract_Layout_modified.Entry_clean lr) := TRANSFORM
             SELF.element    := lr.element;
             SELF.contextRef := lr.contextRef;
             SELF.unitRef    := lr.unitRef;

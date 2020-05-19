@@ -5,4 +5,4 @@ path2 := '~ncf::edgarfilings::raw::aapl_10q_exblob';
 
 test_extract := Text_Tools.XBRL_HTML_File(path);
 
-OUTPUT(test_extract);
+OUTPUT(test_extract,NAMED('cleantext'));
