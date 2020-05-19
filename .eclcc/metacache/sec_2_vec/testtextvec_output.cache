@@ -1,4 +1,4 @@
-<Cache hash="212830741268194921">
+<Cache hash="165262674545036269">
 <Attr module="SEC_2_Vec" name="testtextvec_output">
  <Depend module="EDGAR_Extract" name="text_tools"/>
  <Depend module="TextVectors" name="types"/>

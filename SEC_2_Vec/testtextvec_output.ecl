@@ -5,7 +5,8 @@ IMPORT tv.Types;
 IMPORT * FROM SEC_2_Vec;
 Sentence := Types.Sentence;
 
-path := '~ncf::edgarfilings::raw::aapl_20190928_10k_blob';
+//path := '~ncf::edgarfilings::raw::aapl_20190928_10k_blob';
+path := '~ncf::edgarfilings::raw::group10q';
 rawsents := secvec_input(path);
 rawrec   := RECORD
     UNSIGNED8 sentId := rawsents.sentId;
@@ -24,7 +25,7 @@ testWords := DATASET([{1, 'debt'},{2,'equity'},{3,'cash'},{4,'liquid'}],
 wordVecs := sv.GetWordVectors(model, testWords);
 
 
-OUTPUT(model);
-OUTPUT(wordVecs);
+OUTPUT(model,ALL);
+OUTPUT(wordVecs,ALL);
 OUTPUT(sv.ClosestWords(model, testWords, 3));
 OUTPUT(sv.WordAnalogy(model,'quarter','year','part',2));
