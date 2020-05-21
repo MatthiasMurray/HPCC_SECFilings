@@ -114,7 +114,7 @@ EXPORT Text_Tools := MODULE
             STRING sentence := MATCHTEXT(nicesent/sentence);
         END;
 
-        sentparse := PARSE(F,text,nicesent,parserec,SCAN);
+        sentparse := DEDUP(PARSE(F,text,nicesent,parserec,SCAN));
         
         outrec := RECORD
             UNSIGNED8 ones;

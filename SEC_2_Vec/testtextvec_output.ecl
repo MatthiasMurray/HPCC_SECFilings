@@ -8,7 +8,8 @@ Sentence := Types.Sentence;
 //path := '~ncf::edgarfilings::raw::aapl_20190928_10k_blob';
 //path := '~ncf::edgarfilings::raw::group10q';
 
-#OPTION('outputLimit',150);
+#OPTION('outputLimit',25);
+#OPTION('minOccurs',1);
 path := '~ncf::edgarfilings::raw::more10qs';
 
 rawsents := secvec_input(path);
@@ -32,4 +33,5 @@ wordVecs := sv.GetWordVectors(model, testWords);
 OUTPUT(model,ALL);
 OUTPUT(wordVecs,ALL);
 OUTPUT(sv.ClosestWords(model, testWords, 3));
-OUTPUT(sv.WordAnalogy(model,'quarter','year','part',2));
+//OUTPUT(sv.WordAnalogy(model,'quarter','year','part',2));
+OUTPUT(sv.WordAnalogy(model,'certain','claims','statements',2));
