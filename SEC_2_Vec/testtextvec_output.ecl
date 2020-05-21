@@ -8,7 +8,7 @@ Sentence := Types.Sentence;
 //path := '~ncf::edgarfilings::raw::aapl_20190928_10k_blob';
 //path := '~ncf::edgarfilings::raw::group10q';
 
-#OPTION('outputLimit',100);
+#OPTION('outputLimit',150);
 path := '~ncf::edgarfilings::raw::more10qs';
 
 rawsents := secvec_input(path);
