@@ -60,7 +60,7 @@ EXPORT Text_Tools := MODULE
                                                 'us-gaap:BasisOfPresentationAndSignificantAccountingPoliciesTextBlock',
                                                 'us-gaap:AdditionalFinancialInformationTextBlock',
                                                 'us-gaap:QuarterlyFinancialInformationTextBlock'],
-                                    Concat(CashParse(lr.content)),
+                                    '[OPN]'+Concat(CashParse(lr.content))+'[CLS]',
                                     lr.content);
         END;
 
@@ -95,9 +95,12 @@ EXPORT Text_Tools := MODULE
     EXPORT sep_sents(STRING inString) := FUNCTION
         pattern endpunct := ['.','?','!'];
         pattern ws       := ' ';
-        pattern mess     := (ANY NOT IN endpunct)+;
-        pattern sentence := mess endpunct;
-        rule    nicesent := sentence;
+        pattern mess     := PATTERN('[A-Z]') (ANY NOT IN endpunct)+;
+        pattern sentence := mess endpunct ;
+        pattern begsent  := '[OPN]' sentence ws PATTERN('[A-Z]') OPT('[CLS]');
+        pattern midsent  := endpunct ws sentence ws PATTERN('[A-Z]');
+        pattern endsent  := OPT('[OPN]') OPT(endpunct ws) sentence '[CLS]';
+        rule    nicesent := begsent|midsent|endsent;
 
         inrec  := RECORD
             STRING text;
@@ -108,7 +111,7 @@ EXPORT Text_Tools := MODULE
         parserec := RECORD
             UNSIGNED8 ones  := 1;
             UNSIGNED8 sentId:= 0; 
-            STRING sentence := MATCHTEXT(sentence);
+            STRING sentence := MATCHTEXT(nicesent/sentence);
         END;
 
         sentparse := PARSE(F,text,nicesent,parserec,SCAN);
