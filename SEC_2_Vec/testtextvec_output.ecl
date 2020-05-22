@@ -9,7 +9,8 @@ Sentence := Types.Sentence;
 //path := '~ncf::edgarfilings::raw::group10q';
 
 #OPTION('outputLimit',25);
-#OPTION('minOccurs',1);
+#OPTION('minOccurs',2);
+#OPTION('discThreshold',.05);
 path := '~ncf::edgarfilings::raw::more10qs';
 
 rawsents := secvec_input(path);
