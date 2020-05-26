@@ -1,4 +1,4 @@
-<Cache hash="165262674545036269">
+<Cache hash="212830741268194921">
 <Attr module="SEC_2_Vec" name="secvec_input">
  <Depend module="EDGAR_Extract" name="text_tools"/>
 </Attr>

@@ -5,13 +5,8 @@ IMPORT tv.Types;
 IMPORT * FROM SEC_2_Vec;
 Sentence := Types.Sentence;
 
-//path := '~ncf::edgarfilings::raw::aapl_20190928_10k_blob';
-//path := '~ncf::edgarfilings::raw::group10q';
-
 #OPTION('outputLimit',25);
-#OPTION('minOccurs',2);
-#OPTION('discThreshold',.05);
-path := '~ncf::edgarfilings::raw::more10qs';
+path := '~ncf::edgarfilings::raw::tech10qs_group';
 
 rawsents := secvec_input(path);
 rawrec   := RECORD
@@ -31,8 +26,7 @@ testWords := DATASET([{1, 'debt'},{2,'equity'},{3,'cash'},{4,'liquid'}],
 wordVecs := sv.GetWordVectors(model, testWords);
 
 
-OUTPUT(model,ALL);
+OUTPUT(model,ALL,NAMED('tech10qs_vecmod'));
 OUTPUT(wordVecs,ALL);
 OUTPUT(sv.ClosestWords(model, testWords, 3));
-//OUTPUT(sv.WordAnalogy(model,'quarter','year','part',2));
 OUTPUT(sv.WordAnalogy(model,'certain','claims','statements',2));

@@ -29,7 +29,7 @@ EXPORT Extract_Layout_modified := MODULE
     UNICODE     reportPeriod;
     UNICODE     is_smallbiz;
     UNICODE     pubfloat;
-    UNICODE     comsharesout;
+    //UNICODE     comsharesout;
     UNICODE     wellknown;
     UNICODE     shell;
     UNICODE     centralidxkey;
