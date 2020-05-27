@@ -5,6 +5,7 @@ IMPORT TextVectors.Types;
 IMPORT std.System.Thorlib;
 IMPORT TextVectors.Internal as int;
 IMPORT Std;
+IMPORT SEC_2_Vec;
 IMPORT * FROM SEC_2_Vec;
 
 nNodes := Thorlib.nodes();
@@ -41,7 +42,8 @@ t_Vector := Types.t_Vector;
 EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpochs=0, UNSIGNED miniBatchSize=1000, REAL lr=.1, UNSIGNED negSamp=10,
                   UNSIGNED noProgressEpochs = 5) := MODULE
   SHARED COMPRESS_UPDATES := IF(nNodes > 1, TRUE, FALSE);
-  SHARED w := Weights_modified(shape);  // Module for managing weights.
+  SHARED w := int.Weights(shape);  // Module for managing weights.
+  SHARED wmod := SEC_2_Vec.Weights_modified(shape);
   /**
     * Experimental. Factor by which to reduce the learning rate
     * for each epoch in which no forward progress on loss reduction
@@ -188,20 +190,112 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
     * SliceExt format.  If you want a single set of weight slices rather than a
     * replicated set of extended slices, use Train(...) below.
     */
-  EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, STRING filePath) := FUNCTION
+
+  EXPORT DATASET(SliceExt) Train_Dupl(DATASET(trainingDat) trainData) := FUNCTION
     // Initialize the weights to random values
-    
-    savedweights := Stage1Weights(filePath);
-
-    recformedweights := SET OF REAL8;// savedweights;
-    
-
-    
-    initWeights := w.init_customWeights(savedweights);
+    initWeights := w.initWeights;
     // Get the size of each slice of the weights (i.e. number of weights)
     sliceSize := w.sliceSize;
     // Copy the weights to all nodes as SliceExt records.
     initWeightsExt := w.toSliceExt(initWeights);
+		// Get the size of the local segment of the training data.
+    trainSize := TABLE(trainData, {cnt := COUNT(GROUP)}, LOCAL)[1].cnt;
+    // LOOP for each Epoch (e.g. 1000)
+    DATASET(sliceExt) doEpoch(DATASET(sliceExt) inWeights, UNSIGNED epochNum) := FUNCTION
+      R_train := RandomizeSamples(trainData); // Local operation
+      zWeights := PROJECT(inWeights, TRANSFORM(RECORDOF(LEFT),
+                            SELF.loss := 0,
+                            SELF.batchPos := 1,
+                            SELF := LEFT), LOCAL);
+      noProgress := epochNum - zWeights[1].minEpoch - 1;
+      maxNoProgress := MAX(zWeights[1].maxNoProg, noProgress);
+      epochLR := IF(maxNoProgress > 0, lr * POWER(LR_Progress_Factor, maxNoProgress), lr);
+      epochBatchSize := (UNSIGNED4)IF(maxNoProgress > 0, miniBatchSize * POWER(Batch_Size_Prog_Factor, maxNoProgress),
+                            miniBatchSize);
+      batchSize := MIN(trainSize, epochBatchSize);
+      // LOOP for each mini-batch
+      DATASET(sliceExt) doBatch(DATASET(sliceExt) inWeights2, UNSIGNED batchNum) := FUNCTION
+        // Walk through the randomized samples taking batchSize at a time.
+        firstW := inWeights2(nodeId = node AND sliceId = 1)[1];
+        batchPos := firstW.batchPos;
+        loss := firstW.loss;
+        B_train := CHOOSEN(R_train, batchSize, batchPos, LOCAL);
+        nTrainRecs := TABLE(B_train, {cnt := COUNT(GROUP)}, LOCAL)[node + 1].cnt;
+        // Do the gradient descent, and return the weight updates
+        // Decrease learning rate as we proceed so that we can better converge.
+        avgLoss := loss / (nNodes * batchSize * batchNum * (1 + negSamp));
+        progress := calcProgress(avgLoss);
+        adjLR := MAX((1 - progress), .1) * epochLR;
+        // Train the neural network and get updated weights.
+        tempPrint := Std.System.Log.addWorkunitInformation('batchPos = ' + batchPos +
+                ', rtrain = ' + COUNT(R_train) +
+                ', weightSlots = ' +  w.nWeightSlots +
+                ', sliceSize = ' + sliceSize + ', inWeights2 = ' + COUNT(inWeights2) + ', nWeights = ' + COUNT(inWeights2[1].weights));
+        //DATASET(sliceExt) wUpdates := WHEN(int.svTrainNN(inWeights2, B_train, sliceSize, w.nWeightSlots,
+        //      shape[1], shape[2], nTrainRecs, adjLR, negSamp), tempPrint); // C++
+        DATASET(sliceExt) wUpdates := int.svTrainNN(inWeights2, B_train, sliceSize, w.nWeightSlots,
+              shape[1], shape[2], nTrainRecs, adjLR, negSamp); // C++
+        // Distribute the updates by sliceId for rollup.  Compress the updates if needed.
+        wUpdatesC := w.compressWeights(wUpdates);
+        wUpdatesDC := DISTRIBUTE(wUpdatesC(COUNT(cweights) > 0), sliceId);
+        wUpdatesD := DISTRIBUTE(wUpdates, sliceId);
+        // Now apply the updates on the nodes assigned by sliceId, and then re-replicate to all nodes.
+        newWeightsC := rollUpdatesC(inWeights2(sliceId % nNodes = node), wUpdatesDC);
+        newWeightsN := rollUpdates(inWeights2(sliceId % nNodes = node), wUpdatesD);
+        newWeights0 := IF(COMPRESS_UPDATES, newWeightsC, newWeightsN);
+        // Continue the loop with replicated weights.
+        newWeights1 := PROJECT(newWeights0, TRANSFORM(RECORDOF(LEFT),
+                                                      SELF.batchPos := batchPos + nTrainRecs,
+                                                      SELF := LEFT), LOCAL);
+        firstW2 := newWeights1(nodeId = node AND sliceId = 1)[1];
+        loss2 := firstW2.loss;
+        status := Std.System.Log.addWorkunitInformation('Status: Initial Loss = ' +
+                  ROUND(loss2 / (nNodes * batchSize * (1 + negSamp)), 6));
+        newWeights := IF(epochNum = 1 AND batchNum = 1, WHEN(newWeights1, status), newWeights1);
+        RETURN newWeights;
+      END;
+      epochWeights0 := LOOP(zWeights, TRUE, NOT isEpochDone(ROWS(LEFT), trainSize) , doBatch(ROWS(LEFT), COUNTER));
+      //epochWeights0 := LOOP(zWeights, nBatches, doBatch(ROWS(LEFT), COUNTER));
+      // Mark the loss information in each slice.
+      isBest(SliceExt rec) := rec.loss < rec.minLoss;
+      epochWeights := PROJECT(epochWeights0, TRANSFORM(RECORDOF(LEFT),
+                                    SELF.minLoss := IF(isBest(LEFT), LEFT.loss, LEFT.minLoss),
+                                    SELF.minEpoch := IF(isBest(LEFT), epochNum, LEFT.minEpoch),
+                                    SELF.maxNoProg := maxNoProgress,
+                                    SELF := LEFT), LOCAL);
+      firstW := epochWeights(nodeId = node AND sliceId = 1)[1];
+      loss := firstW.loss;
+      avgLoss := loss / (COUNT(trainData) * (1 + negSamp));
+      progress := calcProgress(avgLoss);
+      adjLR := MAX((1 - progress), .1) * epochLR;
+      minEpoch := firstW.minEpoch;
+      status := Std.System.Log.addWorkunitInformation('Status: ' + 'Epoch = ' + epochNum +
+                                ', Progress = ' + (DECIMAL5_2) (progress * 100) +
+                                '%, Loss = ' + (DECIMAL6_6)avgLoss +
+                                ', minEpoch = ' + minEpoch +
+                                ', LR = ' + (DECIMAL6_6)adjLR +
+                                ', batchSize = ' + batchSize);
+      RETURN WHEN(epochWeights, status);
+    END;
+    finalWeights := LOOP(InitWeightsExt, TRUE, NOT isConverged(ROWS(LEFT), COUNTER, COUNT(trainData)), doEpoch(ROWS(LEFT), COUNTER));
+    firstW := finalWeights(nodeId = node AND sliceId = 1)[1];
+    loss := firstW.loss;
+    status := Std.System.Log.addWorkunitInformation('Status: Final Loss = ' +
+                    ROUND(loss / (COUNT(trainData) * (1 + negSamp)), 6));
+    RETURN WHEN(finalWeights, status);
+  END;
+
+
+  EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, STRING filePath) := FUNCTION
+    // Initialize the weights to random values
+    
+    savedweights := SEC_2_Vec.Stage1Weights(filePath);
+
+    initWeights := wmod.init_customWeights(savedweights);
+    // Get the size of each slice of the weights (i.e. number of weights)
+    sliceSize := w.sliceSize;
+    // Copy the weights to all nodes as SliceExt records.
+    initWeightsExt := wmod.toSliceExt(initWeights);
 		// Get the size of the local segment of the training data.
     trainSize := TABLE(trainData, {cnt := COUNT(GROUP)}, LOCAL)[1].cnt;
     // LOOP for each Epoch (e.g. 1000)

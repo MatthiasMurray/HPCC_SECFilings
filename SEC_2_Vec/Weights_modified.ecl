@@ -111,6 +111,19 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
   /**
     * Return an initial set of weight slices with weights set to random values.
     */
+  EXPORT DATASET(slice) initWeights := FUNCTION
+    slice makeSlice(UNSIGNED c) := TRANSFORM
+      SELF.sliceId := IF(node+1 <= nNodes, (node + 1) + ((c-1) * nNodes), SKIP);
+      SELF.weights := initWeightsVec(sliceSize, 1/shape[2], RANDOM());
+    END;
+    // Create each slice
+    slices := DATASET(slicesPerNode, makeSlice(COUNTER), LOCAL);
+    slicesD := DISTRIBUTE(slices, sliceId);
+    RETURN slicesD;
+  END;
+
+
+
   EXPORT DATASET(slice) init_customWeights (t_Vector customweights):= FUNCTION
     slice makeSlice(UNSIGNED c) := TRANSFORM
       SELF.sliceId := IF(node+1 <= nNodes, (node + 1) + ((c-1) * nNodes), SKIP);

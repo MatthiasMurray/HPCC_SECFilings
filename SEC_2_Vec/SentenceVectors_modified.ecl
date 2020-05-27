@@ -6,6 +6,8 @@ IMPORT TextVectors.internal as int;
 IMPORT Std.Str;
 IMPORT Std.system.Thorlib;
 IMPORT int.svUtils AS Utils;
+IMPORT SEC_2_Vec;
+IMPORT * FROM SEC_2_Vec;
 
 t_TextId := Types.t_TextId;
 t_Sentence := Types.t_Sentence;
@@ -418,7 +420,7 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     RETURN finalWeights;
   END;
 
-  EXPORT DATASET(TextMod) GetModel_custom(DATASET(Sentence) sentences) := FUNCTION
+  EXPORT DATASET(TextMod) GetModel_custom(DATASET(Sentence) sentences, STRING startweight) := FUNCTION
     // Pre-process the corpus to determine vocabulary and training data
     corp := int.Corpus(sentences, wordNGrams, discardThreshold, minOccurs, dropoutK);
     vocabulary := corp.Vocabulary;
@@ -441,8 +443,8 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     batchSizeAdj := IF(batchSize = 0, batchSizeCalc, batchSize);
     // Set up the neural network and do stochastic gradient descent to train
     // the network.
-    nn := int.SGD(nnShape, trainToLoss, numEpochs, batchSizeAdj, learningRate, negSamples, noProgressEpochs);
-    finalWeights := nn.Train_Dupl_cust(trainDat);
+    nn := SEC_2_Vec.SGD_modified(nnShape, trainToLoss, numEpochs, batchSizeAdj, learningRate, negSamples, noProgressEpochs);
+    finalWeights := nn.Train_Dupl_custom(trainDat,startweight);
     // Now extract the final weights for the first layer as the word vectors
     wVecs := computeWordVectors(finalWeights, vocabulary, nnShape);
     // And produce the word portion of the model.
