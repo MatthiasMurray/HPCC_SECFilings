@@ -21,19 +21,19 @@ testWords2 := DATASET([{1, 'pending'},{2,'current'},{3,'probable'},{4,'pursuant'
 wordVecs := sv.GetWordVectors(model, testWords);
 wordVecs2 := sv.GetWordVectors(model, testWords2);
 
-OUTPUT(model(typ=1));
+OUTPUT(model(typ=1),ALL);
 
-OUTPUT(wordVecs);
-OUTPUT(wordVecs2);
+//OUTPUT(wordVecs);
+//OUTPUT(wordVecs2);
 
 
 
-OUTPUT(sv.Similarity(wordVecs[2].vec,wordVecs[3].vec),NAMED('liability_securities_sim'));
-OUTPUT(sv.Similarity(wordVecs[3].vec,wordVecs[4].vec),NAMED('securities_assets_sim'));
+//OUTPUT(sv.Similarity(wordVecs[2].vec,wordVecs[3].vec),NAMED('liability_securities_sim'));
+//OUTPUT(sv.Similarity(wordVecs[3].vec,wordVecs[4].vec),NAMED('securities_assets_sim'));
 
-OUTPUT(sv.Similarity(wordVecs2[1].vec,wordVecs[2].vec),NAMED('pending_current_sim'));
-OUTPUT(sv.Similarity(wordVecs[1].vec,wordVecs[3].vec),NAMED('pending_probable_sim'));
+//OUTPUT(sv.Similarity(wordVecs2[1].vec,wordVecs[2].vec),NAMED('pending_current_sim'));
+//OUTPUT(sv.Similarity(wordVecs[1].vec,wordVecs[3].vec),NAMED('pending_probable_sim'));
 
-OUTPUT(sv.WordAnalogy(model,'debt','cash','uncertain',3));
-OUTPUT(sv.WordAnalogy(model,'debt','liability','securities',3));
-OUTPUT(sv.WordAnalogy(model,'pending','pursuant','probable',3));
+//OUTPUT(sv.WordAnalogy(model,'debt','cash','uncertain',3));
+//OUTPUT(sv.WordAnalogy(model,'debt','liability','securities',3));
+//OUTPUT(sv.WordAnalogy(model,'pending','pursuant','probable',3));

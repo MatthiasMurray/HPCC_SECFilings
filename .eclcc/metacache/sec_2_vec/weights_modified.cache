@@ -1,0 +1,6 @@
+<Cache hash="212830741268194921">
+<Attr module="SEC_2_Vec" name="weights_modified">
+ <Depend module="TextVectors" name="types"/>
+ <Depend module="std.system" name="thorlib"/>
+</Attr>
+</Cache>
