@@ -161,7 +161,7 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     */
   SHARED computeWordVectors(DATASET(SliceExt) slices, DATASET(WordInfo) words,
 																SET OF UNSIGNED shape) := FUNCTION
-    w := int.Weights(shape);  // Module to manage weights
+    w := Weights_modified(shape);  // Module to manage weights
     // As an optimization, we only convert half of the weight slices
     // since the word vectors are always in the first half
     firstHalf := ROUNDUP(w.nSlices / 2);
@@ -183,7 +183,7 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
   // to see which one performs better -- TODO*
   SHARED computeWordVectorsNew(DATASET(SliceExt) slices, DATASET(WordInfo) words,
 																	SET OF UNSIGNED shape) := FUNCTION
-    w := int.Weights(shape);  // Module to manage weights
+    w := Weights_modified(shape);  // Module to manage weights
     // Extract the vectors for each word.  Words should be evenly distributed at this point.
     WordInfo getVectors(WordInfo wi) := TRANSFORM
       // The weights that form the word vector are the layer 1 weights.  j is the wordId
@@ -444,7 +444,8 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     // Set up the neural network and do stochastic gradient descent to train
     // the network.
     nn := SGD_modified(nnShape, trainToLoss, numEpochs, batchSizeAdj, learningRate, negSamples, noProgressEpochs);
-    finalWeights := nn.Train_Dupl_custom(trainDat,startweight.weights);
+
+    finalWeights := nn.Train_Dupl_custom(trainDat,startweight);
     // Now extract the final weights for the first layer as the word vectors
     wVecs := computeWordVectors(finalWeights, vocabulary, nnShape);
     // And produce the word portion of the model.
@@ -472,7 +473,7 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     vocabSize := COUNT(mod(typ=t_ModRecType.word));
     nSentences := COUNT(mod(typ=t_ModRecType.sentence));
     shape := [vocabSize, vecLen, vocabSize];
-    w := int.Weights(shape);  // Module to manage weights
+    w := Weights_modified(shape);  // Module to manage weights
     batchSizeCalc := (UNSIGNED4)(calConst * vocabSize) / ((1 + negSamples) * nNodes);
     batchSizeAdj := IF(batchSize = 0, batchSizeCalc, batchSize);
     TrainStats getStats(TrainStats t) := TRANSFORM

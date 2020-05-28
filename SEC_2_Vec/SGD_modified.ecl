@@ -285,7 +285,7 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
     RETURN WHEN(finalWeights, status);
   END;
 
-  EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, t_Vector savedweights) := FUNCTION
+  EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, DATASET(SliceExt) savedweights) := FUNCTION
     // Initialize the weights to random values
 
     initWeights := wmod.init_customWeights(savedweights);

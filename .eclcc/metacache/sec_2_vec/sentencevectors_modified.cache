@@ -1,10 +1,10 @@
-<Cache hash="212830741268194921">
+<Cache hash="165262674545036269">
 <Attr module="SEC_2_Vec" name="sentencevectors_modified">
  <Depend module="TextVectors" name="types"/>
  <Depend module="std" name="str"/>
  <Depend module="std.system" name="thorlib"/>
  <Depend module="TextVectors.Internal" name="svutils"/>
- <Depend module="TextVectors.Internal" name="weights"/>
+ <Depend module="SEC_2_Vec" name="weights_modified"/>
  <Depend module="TextVectors.Internal" name="corpus"/>
  <Depend module="TextVectors.Internal" name="sgd"/>
  <Depend module="SEC_2_Vec" name="sgd_modified"/>

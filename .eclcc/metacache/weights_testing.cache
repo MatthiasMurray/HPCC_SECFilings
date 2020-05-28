@@ -1,5 +1,5 @@
 <Cache hash="165262674545036269">
-<Attr module="TextVectors.Internal" name="svtrainnn">
+<Attr name="weights_testing">
  <Depend module="TextVectors" name="types"/>
 </Attr>
 </Cache>

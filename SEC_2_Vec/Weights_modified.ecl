@@ -108,6 +108,24 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
       result[i] = maxweight * 2 * (double)rand() / (double)(RAND_MAX) - maxweight;
     }
   ENDEMBED;
+
+
+  SHARED t_Vector custWeightsVec(UNSIGNED4 n, DATASET(SliceExt) currweight) := EMBED(C++)//, REAL8 maxweight, UNSIGNED4 seed) := EMBED(C++)
+    #include <stdlib.h>
+    #include <stdint.h>
+    #include <time.h>
+    #body
+    __lenResult = n * sizeof(double);
+    __isAllResult = false;
+    double* result = (double*) rtlMalloc(__lenResult);
+    __result = (void*) result;
+    //srand(seed);
+    // Assign a random number between -maxweight and maxweight.
+    for (uint32_t i=0; i<n; i++) {
+      result[i] = currweight[i].weights;
+      //result[i] = maxweight * 2 * (double)rand() / (double)(RAND_MAX) - maxweight;
+    }
+  ENDEMBED;
   /**
     * Return an initial set of weight slices with weights set to random values.
     */
@@ -124,10 +142,11 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
 
 
 
-  EXPORT DATASET(slice) init_customWeights (t_Vector customweights):= FUNCTION
+  EXPORT DATASET(slice) init_customWeights (DATASET(SliceExt) customweights):= FUNCTION
     slice makeSlice(UNSIGNED c) := TRANSFORM
       SELF.sliceId := IF(node+1 <= nNodes, (node + 1) + ((c-1) * nNodes), SKIP);
-      SELF.weights := customweights;
+      //SELF.weights := customweights;
+      SELF.weights := custWeightsVec(sliceSize, customweights);
     END;
     // Create each slice
     slices := DATASET(slicesPerNode, makeSlice(COUNTER), LOCAL);
@@ -215,7 +234,7 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
     * a sparse representation [<index><weight>...] packed into a DATA field.
     */
   EXPORT DATA compressOne(t_Vector wts, UNSIGNED4 slicesize) := EMBED(C++)
-    struct cdat
+    struct cdat1
     {
       uint32_t indx;
       double weight;
@@ -224,7 +243,7 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
     double * weights = (double *)wts;
     uint32_t i;
     uint32_t out = 0;
-    cdat * cweights = (cdat *) rtlMalloc(slicesize * sizeof(cdat));
+    cdat1 * cweights = (cdat1 *) rtlMalloc(slicesize * sizeof(cdat));
     for (i = 0; i < slicesize; i++)
     {
       if (fabs(weights[i]) > 0.000000001)
@@ -233,9 +252,9 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
         cweights[out++].weight = weights[i];
       }
     }
-    uint32_t outSize = out * sizeof(cdat);
+    uint32_t outSize = out * sizeof(cdat1);
     __lenResult = outSize;
-    cdat * outBuff = (cdat *) rtlMalloc(outSize);
+    cdat1 * outBuff = (cdat1 *) rtlMalloc(outSize);
     for (i = 0; i < out; i++)
     {
       outBuff[i] = cweights[i];
