@@ -7,5 +7,6 @@
  <Depend module="TextVectors.Internal" name="weights"/>
  <Depend module="TextVectors.Internal" name="corpus"/>
  <Depend module="TextVectors.Internal" name="sgd"/>
+ <Depend module="SEC_2_Vec" name="sgd_modified"/>
 </Attr>
 </Cache>

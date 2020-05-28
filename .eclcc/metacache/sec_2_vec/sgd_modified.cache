@@ -6,6 +6,5 @@
  <Depend module="SEC_2_Vec" name="weights_modified"/>
  <Depend module="std.system" name="log"/>
  <Depend module="TextVectors.Internal" name="svtrainnn"/>
- <Depend module="SEC_2_Vec" name="stage_learn"/>
 </Attr>
 </Cache>

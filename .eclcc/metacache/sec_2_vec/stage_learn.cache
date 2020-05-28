@@ -3,6 +3,6 @@
  <Depend module="EDGAR_Extract" name="text_tools"/>
  <Depend module="TextVectors" name="types"/>
  <Depend module="SEC_2_Vec" name="secvec_input"/>
- <Depend module="SEC_2_Vec" name="sv2"/>
+ <Depend module="SEC_2_Vec" name="sentencevectors_modified"/>
 </Attr>
 </Cache>

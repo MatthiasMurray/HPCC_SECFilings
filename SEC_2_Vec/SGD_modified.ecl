@@ -191,7 +191,7 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
     * replicated set of extended slices, use Train(...) below.
     */
 
-    EXPORT DATASET(SliceExt) Train_Dupl(DATASET(trainingDat) trainData) := FUNCTION
+  EXPORT DATASET(SliceExt) Train_Dupl(DATASET(trainingDat) trainData) := FUNCTION
     // Initialize the weights to random values
     initWeights := w.initWeights;
     // Get the size of each slice of the weights (i.e. number of weights)
@@ -285,12 +285,10 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
     RETURN WHEN(finalWeights, status);
   END;
 
-  EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, STRING filePath) := FUNCTION
+  EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, t_Vector savedweights) := FUNCTION
     // Initialize the weights to random values
-    
-    savedweights := SEC_2_Vec.Stage_Learn.Stage1(filePath);
 
-    initWeights := wmod.init_customWeights(savedweights.weights);
+    initWeights := wmod.init_customWeights(savedweights);
     // Get the size of each slice of the weights (i.e. number of weights)
     sliceSize := wmod.sliceSize;
     // Copy the weights to all nodes as SliceExt records.
