@@ -110,19 +110,21 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
   ENDEMBED;
 
 
-  SHARED t_Vector custWeightsVec(UNSIGNED4 n, DATASET(SliceExt) currweight) := EMBED(C++)//, REAL8 maxweight, UNSIGNED4 seed) := EMBED(C++)
+  SHARED t_Vector custWeightsVec(UNSIGNED4 n, t_Vector currweight) := EMBED(C++)//, REAL8 maxweight, UNSIGNED4 seed) := EMBED(C++)
     #include <stdlib.h>
     #include <stdint.h>
     #include <time.h>
     #body
-    __lenResult = n * sizeof(double);
+    __lenResult = n * sizeof(float);
     __isAllResult = false;
-    double* result = (double*) rtlMalloc(__lenResult);
-    __result = (void*) result;
+    float* result = (float*) rtlMalloc(__lenResult);
+    float* cw = (float*) currweight;
+    //__result = (void*) result;
+    __result = (float*) result;
     //srand(seed);
     // Assign a random number between -maxweight and maxweight.
     for (uint32_t i=0; i<n; i++) {
-      result[i] = currweight[i].weights;
+      result[i] = cw[i];
       //result[i] = maxweight * 2 * (double)rand() / (double)(RAND_MAX) - maxweight;
     }
   ENDEMBED;
@@ -143,13 +145,14 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
 
 
   EXPORT DATASET(slice) init_customWeights (DATASET(SliceExt) customweights):= FUNCTION
-    slice makeSlice(UNSIGNED c) := TRANSFORM
+
+    slice makeSlice(UNSIGNED c,DATASET(SliceExt) lr) := TRANSFORM
       SELF.sliceId := IF(node+1 <= nNodes, (node + 1) + ((c-1) * nNodes), SKIP);
       //SELF.weights := customweights;
-      SELF.weights := custWeightsVec(sliceSize, customweights);
+      SELF.weights := custWeightsVec(sliceSize, lr[c].weights);
     END;
     // Create each slice
-    slices := DATASET(slicesPerNode, makeSlice(COUNTER), LOCAL);
+    slices := DATASET(slicesPerNode, makeSlice(COUNTER, customweights), LOCAL);
     slicesD := DISTRIBUTE(slices, sliceId);
     RETURN slicesD;
   END;
