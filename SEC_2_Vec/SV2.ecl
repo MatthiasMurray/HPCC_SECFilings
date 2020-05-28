@@ -6,8 +6,6 @@ IMPORT TextVectors.internal as int;
 IMPORT Std.Str;
 IMPORT Std.system.Thorlib;
 IMPORT int.svUtils AS Utils;
-IMPORT SEC_2_Vec;
-IMPORT * FROM SEC_2_Vec;
 
 t_TextId := Types.t_TextId;
 t_Sentence := Types.t_Sentence;
@@ -140,7 +138,7 @@ nNodes := Thorlib.nodes();
   *                        to FALSE will result in a smaller model with only the word vectors
   *                        (default TRUE).
   */
-EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
+EXPORT SV2(UNSIGNED2 vecLen=100,
                       REAL trainToLoss = .05,
                       UNSIGNED4 numEpochs= 0,
                       UNSIGNED4 batchSize=0,
@@ -382,7 +380,7 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     * @return A model in DATASET(TextMod) format.
 		* @see Types.Sentence
     */
-  EXPORT DATASET(SliceExt) GetModel_finalweights(DATASET(Sentence) sentences) := FUNCTION
+  EXPORT DATASET(TextMod) GetModel(DATASET(Sentence) sentences) := FUNCTION
     // Pre-process the corpus to determine vocabulary and training data
     corp := int.Corpus(sentences, wordNGrams, discardThreshold, minOccurs, dropoutK);
     vocabulary := corp.Vocabulary;
@@ -417,46 +415,47 @@ EXPORT SentenceVectors_modified(UNSIGNED2 vecLen=100,
     sMod := makeSentModel(sVecs);
     // Concatenate the two portions, unless saveSentences is FALSE.
     mod := IF(saveSentences, wMod + sMod, wMod);
+    RETURN mod;
+  END;
+
+  EXPORT DATASET(SliceExt) GetModel_finalweights(DATASET(Sentence) sentences) := FUNCTION
+    // Pre-process the corpus to determine vocabulary and training data
+    corp := int.Corpus(sentences, wordNGrams, discardThreshold, minOccurs, dropoutK);
+    vocabulary := corp.Vocabulary;
+    trainDat := corp.GetTraining;
+    trainCount := COUNT(trainDat);
+    vocabSize := corp.vocabSize;
+    // Set the shape of the neural network:
+    // - input layer = vocabSize
+    // - hidden layer = size of word / sentence vectors
+    // - output layer = vocabSize
+    nnShape := [vocabSize, vecLen, vocabSize];
+    // If the default batchSize is zero (default -- auto), automatically calculate
+    // a reasonable value.
+    // nWeights = # of weights = 2 * vocabSize * vecLen
+    // ud = Update Density = # of weights per batch / # of weights = 2 * vecLen * (1 + negSamp) * batchSize * nNodes /
+    //      (2 * veclen * vocabSize) = (1 + negSamp) * batchSize * nNodes / vocabSize
+    // We want to adjust batchSize such that ud = calConst.
+    // batchSize = calConst * vocabSize / ((1+ negSamp) * nNodes)
+    batchSizeCalc := (UNSIGNED4)(calConst * vocabSize) / ((1 + negSamples) * nNodes);
+    batchSizeAdj := IF(batchSize = 0, batchSizeCalc, batchSize);
+    // Set up the neural network and do stochastic gradient descent to train
+    // the network.
+    nn := int.SGD(nnShape, trainToLoss, numEpochs, batchSizeAdj, learningRate, negSamples, noProgressEpochs);
+    finalWeights := nn.Train_Dupl(trainDat);
+    // Now extract the final weights for the first layer as the word vectors
+    //wVecs := computeWordVectors(finalWeights, vocabulary, nnShape);
+    // And produce the word portion of the model.
+    //wMod := makeWordModel(wVecs);
+    // Calculate a vector for each sentence in the corpus to produce the sentence portion
+    // of the model
+    //sVecs := sent2vector(wMod, corp.Sentences, vecLen, mapMissingWords := FALSE);
+    //sMod := makeSentModel(sVecs);
+    // Concatenate the two portions, unless saveSentences is FALSE.
+    //mod := IF(saveSentences, wMod + sMod, wMod);
     RETURN finalWeights;
   END;
 
-//  EXPORT DATASET(TextMod) GetModel_custom(DATASET(Sentence) sentences, STRING startweight) := FUNCTION
-//    // Pre-process the corpus to determine vocabulary and training data
-//    corp := int.Corpus(sentences, wordNGrams, discardThreshold, minOccurs, dropoutK);
-//    vocabulary := corp.Vocabulary;
-//    trainDat := corp.GetTraining;
-//    trainCount := COUNT(trainDat);
-//    vocabSize := corp.vocabSize;
-//    // Set the shape of the neural network:
-//    // - input layer = vocabSize
-//    // - hidden layer = size of word / sentence vectors
-//    // - output layer = vocabSize
-//    nnShape := [vocabSize, vecLen, vocabSize];
-//    // If the default batchSize is zero (default -- auto), automatically calculate
-//    // a reasonable value.
-//    // nWeights = # of weights = 2 * vocabSize * vecLen
-//    // ud = Update Density = # of weights per batch / # of weights = 2 * vecLen * (1 + negSamp) * batchSize * nNodes /
-//    //      (2 * veclen * vocabSize) = (1 + negSamp) * batchSize * nNodes / vocabSize
-//    // We want to adjust batchSize such that ud = calConst.
-//    // batchSize = calConst * vocabSize / ((1+ negSamp) * nNodes)
-//    batchSizeCalc := (UNSIGNED4)(calConst * vocabSize) / ((1 + negSamples) * nNodes);
-//    batchSizeAdj := IF(batchSize = 0, batchSizeCalc, batchSize);
-//    // Set up the neural network and do stochastic gradient descent to train
-//    // the network.
-//    nn := SEC_2_Vec.SGD_modified(nnShape, trainToLoss, numEpochs, batchSizeAdj, learningRate, negSamples, noProgressEpochs);
-//    t_Vector finalWeights := nn.Train_Dupl_custom(trainDat,startweight);
-//    // Now extract the final weights for the first layer as the word vectors
-//    wVecs := computeWordVectors(finalWeights, vocabulary, nnShape);
-//    // And produce the word portion of the model.
-//    wMod := makeWordModel(wVecs);
-//    // Calculate a vector for each sentence in the corpus to produce the sentence portion
-//    // of the model
-//    sVecs := sent2vector(wMod, corp.Sentences, vecLen, mapMissingWords := FALSE);
-//    sMod := makeSentModel(sVecs);
-//    // Concatenate the two portions, unless saveSentences is FALSE.
-//    mod := IF(saveSentences, wMod + sMod, wMod);
-//    RETURN mod;
-//  END;
 
   /**
     * Return the parameters under which the model was generated.  This function

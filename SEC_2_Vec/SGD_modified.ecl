@@ -191,7 +191,7 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
     * replicated set of extended slices, use Train(...) below.
     */
 
-  EXPORT DATASET(SliceExt) Train_Dupl(DATASET(trainingDat) trainData) := FUNCTION
+    EXPORT DATASET(SliceExt) Train_Dupl(DATASET(trainingDat) trainData) := FUNCTION
     // Initialize the weights to random values
     initWeights := w.initWeights;
     // Get the size of each slice of the weights (i.e. number of weights)
@@ -285,15 +285,14 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
     RETURN WHEN(finalWeights, status);
   END;
 
-
   EXPORT DATASET(SliceExt) Train_Dupl_custom(DATASET(trainingDat) trainData, STRING filePath) := FUNCTION
     // Initialize the weights to random values
     
-    savedweights := SEC_2_Vec.Stage1Weights(filePath);
+    savedweights := SEC_2_Vec.Stage_Learn.Stage1(filePath);
 
-    initWeights := wmod.init_customWeights(savedweights);
+    initWeights := wmod.init_customWeights(savedweights.weights);
     // Get the size of each slice of the weights (i.e. number of weights)
-    sliceSize := w.sliceSize;
+    sliceSize := wmod.sliceSize;
     // Copy the weights to all nodes as SliceExt records.
     initWeightsExt := wmod.toSliceExt(initWeights);
 		// Get the size of the local segment of the training data.
@@ -327,14 +326,14 @@ EXPORT SGD_modified(SET OF INTEGER4 shape, REAL trainToLoss=.05, UNSIGNED numEpo
         // Train the neural network and get updated weights.
         tempPrint := Std.System.Log.addWorkunitInformation('batchPos = ' + batchPos +
                 ', rtrain = ' + COUNT(R_train) +
-                ', weightSlots = ' +  w.nWeightSlots +
+                ', weightSlots = ' +  wmod.nWeightSlots +
                 ', sliceSize = ' + sliceSize + ', inWeights2 = ' + COUNT(inWeights2) + ', nWeights = ' + COUNT(inWeights2[1].weights));
         //DATASET(sliceExt) wUpdates := WHEN(int.svTrainNN(inWeights2, B_train, sliceSize, w.nWeightSlots,
         //      shape[1], shape[2], nTrainRecs, adjLR, negSamp), tempPrint); // C++
-        DATASET(sliceExt) wUpdates := int.svTrainNN(inWeights2, B_train, sliceSize, w.nWeightSlots,
+        DATASET(sliceExt) wUpdates := int.svTrainNN(inWeights2, B_train, sliceSize, wmod.nWeightSlots,
               shape[1], shape[2], nTrainRecs, adjLR, negSamp); // C++
         // Distribute the updates by sliceId for rollup.  Compress the updates if needed.
-        wUpdatesC := w.compressWeights(wUpdates);
+        wUpdatesC := wmod.compressWeights(wUpdates);
         wUpdatesDC := DISTRIBUTE(wUpdatesC(COUNT(cweights) > 0), sliceId);
         wUpdatesD := DISTRIBUTE(wUpdates, sliceId);
         // Now apply the updates on the nodes assigned by sliceId, and then re-replicate to all nodes.
