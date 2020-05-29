@@ -27,13 +27,41 @@ EXPORT Stage_Learn := MODULE
 
     RETURN stage1weights;
   END;
-  EXPORT FinalStage(STRING trainPath, STRING corpPath) := FUNCTION
+  EXPORT FinalStage(STRING trainPath, STRING trainform, STRING corpPath) := FUNCTION
+    
 
-    rawsents := secvec_input(trainPath);
-    rawrec   := RECORD
+    ptext_extr(STRING tPath) := FUNCTION
+      corp := DATASET(tPath,STRING);
+      
+      rec := RECORD
+        STRING text := corp.line;
+      END;
+      corp_concat := Concat(TABLE(corp,rec));
+      corp_sents  := sep_sents(corp_concat);
+      sentrec := RECORD
+        UNSIGNED8 sentId := corp_sents.sentId;
+        STRING    text   := corp_sents.text;
+      END;
+      
+      outsents := TABLE(corp_sents,sentrec);
+
+      RETURN outsents;
+    END;
+
+    rs(STRING tpath, STRING tform) := FUNCTION
+      out := CASE(tform,
+           'SEC' => secvec_input(tpath),
+           'ptext' => ptext_extr(tpath));
+      RETURN out;
+    END;    
+
+    rawsents := rs(trainPath, trainform);
+
+    rawrec := RECORD
         UNSIGNED8 sentId := rawsents.sentId;
         STRING    text   := rawsents.text;
     END;
+    
     trainSentences := TABLE(rawsents,rawrec);
 
     sv := SentenceVectors_modified();

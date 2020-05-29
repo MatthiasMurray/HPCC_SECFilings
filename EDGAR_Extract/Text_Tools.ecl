@@ -11,7 +11,7 @@ EXPORT Text_Tools := MODULE
         pattern fmttag := '<span' mess+ '>';
         pattern fmtend := '</span>';
         pattern txtblk := (ANY NOT IN ['<','>'])+;
-        pattern fmtpat := fmttag txtblk fmtend;
+        pattern fmtpat := OPT(fmttag) txtblk OPT(fmtend);
         rule txtblock  := fmtpat;
 
         outrec := RECORD
