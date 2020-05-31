@@ -1,5 +1,5 @@
 //contains word clouds
-IMPORT Visualizer.Visualizer as Visualizer;
+IMPORT Visualizer;
 IMPORT * FROM SEC_Viz;
 IMPORT STD;
 
