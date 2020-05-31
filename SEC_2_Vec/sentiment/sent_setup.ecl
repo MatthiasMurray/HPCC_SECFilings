@@ -44,6 +44,22 @@ EXPORT sent_setup(STRING docPath) := MODULE
     DATASET(tfrec) docs;
   END;
 
+  EXPORT svecrec  := RECORD
+    STRING  text;
+    t_Vector vec;
+  END;
+
+  EXPORT vecrec := RECORD
+      REAL8 elem;
+  END;
+
+  EXPORT wrecnew := RECORD
+      UNSIGNED8    sentId;
+      STRING         text;
+      REAL8   tfidf_score;
+      vecrec     w_Vector;
+  END;
+
   EXPORT tfidf_step1 := TABLE(words,step1rec);
 
   EXPORT tfidf_all := FUNCTION
@@ -82,7 +98,7 @@ EXPORT sent_setup(STRING docPath) := MODULE
     RETURN combo;
   END;
 
-  EXPORT sent_vecs := FUNCTION
+  EXPORT sent_vecs_byword := FUNCTION
     weighted := RECORD
       STRING word := tf_withvecs.text;
       t_Vector vec:= tf_withvecs.vec;
@@ -92,9 +108,7 @@ EXPORT sent_setup(STRING docPath) := MODULE
     sentvecsform := TABLE(tf_withvecs,weighted);
 
     vecmult(t_Vector v,REAL8 x) := FUNCTION
-      vecrec := RECORD
-        REAL8 elem;
-      END;
+      
       vec := DATASET(v,vecrec);
       outrec := RECORD
         REAL8 w_elem := x * vec.elem;
@@ -124,6 +138,68 @@ EXPORT sent_setup(STRING docPath) := MODULE
     wsent_final := TABLE(sentvecsform,dosents);
 
     RETURN wsent_final;
+  END;
+
+  EXPORT sent_vecs := FUNCTION
+    
+    wdocrec := RECORD
+      STRING word;
+      t_Vector vec;
+      DATASET(wrecnew) docs;
+    END;
+
+    svb1 := sent_vecs_byword;
+
+    svbdrec:= RECORD
+      UNSIGNED8 sentId := svb1.docs.sentId;
+      STRING text := svb1.docs.text;
+      REAL8 tfidf_score := svb1.docs.tfidf_score;
+      vecrec w_Vector := svb1.docs.w_Vector;
+    END;
+
+    svbrec := RECORD
+      STRING word := svb1.word;
+      t_Vector vec:= svb1.vec;
+      DATASET(wrecnew) docs := TABLE(svb1.docs,svbdrec);
+    END;
+
+    svb := TABLE(svb1,svbrec);
+
+    DATASET(wrecnew) addvecsets(DATASET(wrecnew) L,DATASET(wrecnew) R) := FUNCTION
+      
+      vecrec addvecs(vecrec v1,vecrec v2) := FUNCTION
+
+        vecrec addT(vecrec L,vecrec R) := TRANSFORM
+          SELF.elem := L.elem + R.elem;
+        END;
+
+        out := PROJECT(v1,addT(LEFT,v2));
+
+        RETURN out;
+      END;
+
+      DATASET(wrecnew) tsets(wrecnew L,wrecnew R) := TRANSFORM
+        SELF.sentId := L.sentId;
+        SELF.text   := L.text;
+        SELF.tfidf_score := L.tfidf_score;
+        SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
+      END;
+
+      out := PROJECT(L,tsets(LEFT,R));
+
+      RETURN out;
+    END;
+
+    wdocrec t(svb L,svb R) := TRANSFORM
+      SELF.word := L.word;
+      SELF.vec  := L.vec;
+      SELF.docs := addvecsets(L.docs,R.docs);
+    END;
+
+    out := ROLLUP(svb,LEFT.docs.text = RIGHT.docs.text,t(LEFT,RIGHT));
+
+    RETURN TABLE(out,{DATASET(wrecnew) docs := out.docs});
+
   END;
 
 END;
