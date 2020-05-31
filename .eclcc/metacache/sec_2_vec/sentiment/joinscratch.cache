@@ -1,5 +1,6 @@
 <Cache hash="-1774118299322417331">
-<Attr module="SEC_2_Vec.sentiment" name="sent_test">
+<Attr module="SEC_2_Vec.sentiment" name="joinscratch">
+ <Depend module="TextVectors" name="types"/>
  <Depend module="SEC_2_Vec.sentiment" name="sent_setup"/>
 </Attr>
 </Cache>
