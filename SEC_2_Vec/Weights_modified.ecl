@@ -115,14 +115,16 @@ EXPORT Weights_modified(SET OF INTEGER4 shape) := MODULE
     #include <stdint.h>
     #include <time.h>
     #body
-    __lenResult = n * sizeof(float);
+    __lenResult = n * sizeof(double);
     __isAllResult = false;
-    float* result = (float*) rtlMalloc(__lenResult);
-    float* cw = (float*) currweight;
+    double *result = (double*) rtlMalloc(__lenResult);
+    //float* cw = (float*) currweight;
     //__result = (void*) result;
-    __result = (float*) result;
+    __result = (void *) result;
     //srand(seed);
     // Assign a random number between -maxweight and maxweight.
+    double *cw = (double *) currweight;
+    
     for (uint32_t i=0; i<n; i++) {
       result[i] = cw[i];
       //result[i] = maxweight * 2 * (double)rand() / (double)(RAND_MAX) - maxweight;

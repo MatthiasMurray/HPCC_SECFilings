@@ -1,0 +1,6 @@
+<Cache hash="165262674545036269">
+<Attr name="wordcloud_test">
+ <Depend module="Visualizer" name="visualizer"/>
+ <Depend module="SEC_Viz" name="sec_wordcloud"/>
+</Attr>
+</Cache>

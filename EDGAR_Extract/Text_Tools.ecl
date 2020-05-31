@@ -9,9 +9,11 @@ EXPORT Text_Tools := MODULE
 
         pattern mess   := ANY NOT IN ['<','>'];
         pattern fmttag := '<span' mess+ '>';
+        pattern divtag := '<div' mess+ '>';
         pattern fmtend := '</span>';
-        pattern txtblk := (ANY NOT IN ['<','>'])+;
-        pattern fmtpat := OPT(fmttag) txtblk OPT(fmtend);
+        pattern divend := '</div>';
+        pattern txtblk := (ANY NOT IN ['<','>',divtag,divend])+;
+        pattern fmtpat := fmttag txtblk fmtend;
         rule txtblock  := fmtpat;
 
         outrec := RECORD

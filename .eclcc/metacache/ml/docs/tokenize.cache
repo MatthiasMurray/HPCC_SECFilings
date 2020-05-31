@@ -1,0 +1,7 @@
+<Cache hash="-8448471002095488454">
+<Attr module="ML.Docs" name="tokenize">
+ <Depend module="ML.Docs" name="types"/>
+ <Depend module="std" name="str"/>
+ <Depend module="ML" name="config"/>
+</Attr>
+</Cache>

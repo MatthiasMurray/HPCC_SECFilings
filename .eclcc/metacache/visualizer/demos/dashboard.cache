@@ -1,0 +1,6 @@
+<Cache hash="165262674545036269">
+<Attr module="Visualizer.Demos" name="dashboard">
+ <Depend module="Visualizer.SampleData" name="sales"/>
+ <Depend module="Visualizer" name="visualizer"/>
+</Attr>
+</Cache>
