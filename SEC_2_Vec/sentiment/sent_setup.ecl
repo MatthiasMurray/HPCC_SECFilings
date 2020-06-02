@@ -5,6 +5,22 @@ IMPORT TextVectors as tv;
 IMPORT tv.Types;
 t_Vector := Types.t_Vector;
 
+
+//the sentiment setup module.
+//runs sentiment prep, which involves training Word2Vec on the given path location
+//INITIALIZED DATASETS:
+// sp (outputs sent_prep module evaluated on docPath)
+// lex (outputs sent_prep.dLexicon)
+// spsent (outputs sent_prep.sentences) -- numbered training sentences format
+// words (lex subset down to just the field 'word')
+// docus (spsent formally assigned record sentrec)
+//INITIALIZED RECORD TYPES:
+// sentrec (used to format spsent -> docus) same format as numbered training sentences
+// step1rec (used to format words -> tfidf_step1) each word paired with all of docus
+// tfrec (used to extend docus to contain tfidf_score in tfidf_all)
+// wrec (used to extend tfrec to contain w_Vector for calculating weighted vectors)
+// tfidfrec (similar to step1rec, but docs field is DATASET(tfrec) rather than DATASET(docus))
+// svecrec (contains a word and its vectorized embedding)
 EXPORT sent_setup(STRING docPath) := MODULE
   
   
@@ -47,17 +63,6 @@ EXPORT sent_setup(STRING docPath) := MODULE
   EXPORT svecrec  := RECORD
     STRING  text;
     t_Vector vec;
-  END;
-
-  EXPORT vecrec := RECORD
-      REAL8 elem;
-  END;
-
-  EXPORT wrecnew := RECORD
-      UNSIGNED8    sentId;
-      STRING         text;
-      REAL8   tfidf_score;
-      vecrec     w_Vector;
   END;
 
   EXPORT tfidf_step1 := TABLE(words,step1rec);
@@ -152,18 +157,18 @@ EXPORT sent_setup(STRING docPath) := MODULE
 
   //C++ function for adding t_Vector sets element-wise
   EXPORT t_Vector addvecs(t_Vector v1,t_Vector v2,INTEGER N) := EMBED(C++)
-        #body
-        __lenResult = (N*sizeof(double));
-        double *wout = (double *) rtlMalloc(__lenResult);
-        __isAllResult = false;
-        __result = (void *) wout;
-        double *vv1 = (double *) v1;
-        double *vv2 = (double *) v2;
-        for (int i = 0; i < N; i++)
-        {
-          wout[i] = vv1[i]+vv2[i];
-        }
-      ENDEMBED;
+    #body
+    __lenResult = (N*sizeof(double));
+    double *wout = (double *) rtlMalloc(__lenResult);
+    __isAllResult = false;
+    __result = (void *) wout;
+    double *vv1 = (double *) v1;
+    double *vv2 = (double *) v2;
+    for (int i = 0; i < N; i++)
+    {
+      wout[i] = vv1[i]+vv2[i];
+    }
+  ENDEMBED;
 
   EXPORT sent_vecs := FUNCTION
 
