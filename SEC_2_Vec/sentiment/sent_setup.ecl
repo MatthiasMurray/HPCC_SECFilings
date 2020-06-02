@@ -107,22 +107,32 @@ EXPORT sent_setup(STRING docPath) := MODULE
 
     sentvecsform := TABLE(tf_withvecs,weighted);
 
-    vecmult(t_Vector v,REAL8 x) := FUNCTION
-      
-      vec := DATASET(v,vecrec);
-      outrec := RECORD
-        REAL8 w_elem := x * vec.elem;
-      END;
-      out := TABLE(vec,outrec);
-      RETURN out;
-    END;
+    //t_Vector vecmult(t_Vector v,UNSIGNED4 N,REAL8 x) := EMBED(C++)
+    t_Vector vecmult(t_Vector v,REAL8 x) := EMBED(C++)
+      #body
+      size32_t N = lenV;
+      //uint32_t N = (uint32_t) N;
+      __lenResult = (size32_t) (N * sizeof(double));
+      double *wout = (double*) rtlMalloc(__lenResult);
+      __isAllResult = false;
+      __result = (void *) wout;
+
+      double *vv = (double *) v;
+      double xx = (double) x;
+      for (unsigned i = 0; i < N; i++)
+      {
+        wout[i] = vv[i] * xx;
+      }
+    ENDEMBED;
 
     wgtrow(t_Vector v, DATASET(tfrec) d) := FUNCTION
+      UNSIGNED4 C := COUNT(v);
       wrow := RECORD
         UNSIGNED8      sentId := d.sentId;
         STRING           text := d.text;
         REAL8     tfidf_score := d.tfidf_score;
         t_Vector     w_Vector := vecmult(v,d.tfidf_score);
+        //t_Vector     w_Vector := PROJECT(v,vecmult(LEFT,d.tfidf_score));
       END;
 
       weightrow := TABLE(d,wrow);
@@ -140,65 +150,62 @@ EXPORT sent_setup(STRING docPath) := MODULE
     RETURN wsent_final;
   END;
 
+  //C++ function for adding t_Vector sets element-wise
+  EXPORT t_Vector addvecs(t_Vector v1,t_Vector v2,INTEGER N) := EMBED(C++)
+        #body
+        __lenResult = (N*sizeof(double));
+        double *wout = (double *) rtlMalloc(__lenResult);
+        __isAllResult = false;
+        __result = (void *) wout;
+        double *vv1 = (double *) v1;
+        double *vv2 = (double *) v2;
+        for (int i = 0; i < N; i++)
+        {
+          wout[i] = vv1[i]+vv2[i];
+        }
+      ENDEMBED;
+
   EXPORT sent_vecs := FUNCTION
-    
-    wdocrec := RECORD
-      STRING word;
-      t_Vector vec;
-      DATASET(wrecnew) docs;
+
+    svb := sent_vecs_byword;
+
+    wrec addvecsets(DATASET(wrec) L,DATASET(wrec) R) := FUNCTION
+
+      //wrec helper1(t_Vector v1,DATASET(wrec) v2) := TRANSFORM
+      //  SELF.sentId := v2.sentId;
+      //  SELF.text := v2.text;
+      //  SELF.tfidf_score := v2.tfidf_score;
+      //  SELF.w_Vector := addvecs(v1,v2.w_Vector,COUNT(v1));
+      //END;
+
+      //DATASET(wrec) outT(wrec L,DATASET(wrec) R) := TRANSFORM
+      //  SELF.sentId := L.sentId;
+      //  SELF.text := L.text;
+      //  SELF.tfidf_score := L.tfidf_score;
+      //  SELF.w_Vector := helper1(L.w_Vector,R);
+      //END;
+
+      //out := PROJECT(L,outT(LEFT,R));
+
+      //RETURN out;
+
+      jj := JOIN(L,R,LEFT.sentId=RIGHT.sentId);
+
+      RETURN jj;
+
     END;
 
-    svb1 := sent_vecs_byword;
-
-    svbdrec:= RECORD
-      UNSIGNED8 sentId := svb1.docs.sentId;
-      STRING text := svb1.docs.text;
-      REAL8 tfidf_score := svb1.docs.tfidf_score;
-      vecrec w_Vector := svb1.docs.w_Vector;
-    END;
-
-    svbrec := RECORD
-      STRING word := svb1.word;
-      t_Vector vec:= svb1.vec;
-      DATASET(wrecnew) docs := TABLE(svb1.docs,svbdrec);
-    END;
-
-    svb := TABLE(svb1,svbrec);
-
-    DATASET(wrecnew) addvecsets(DATASET(wrecnew) L,DATASET(wrecnew) R) := FUNCTION
-      
-      vecrec addvecs(vecrec v1,vecrec v2) := FUNCTION
-
-        vecrec addT(vecrec L,vecrec R) := TRANSFORM
-          SELF.elem := L.elem + R.elem;
-        END;
-
-        out := PROJECT(v1,addT(LEFT,v2));
-
-        RETURN out;
-      END;
-
-      DATASET(wrecnew) tsets(wrecnew L,wrecnew R) := TRANSFORM
-        SELF.sentId := L.sentId;
-        SELF.text   := L.text;
-        SELF.tfidf_score := L.tfidf_score;
-        SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-      END;
-
-      out := PROJECT(L,tsets(LEFT,R));
-
-      RETURN out;
-    END;
-
-    wdocrec t(svb L,svb R) := TRANSFORM
+    svb t(svb L,svb R) := TRANSFORM
       SELF.word := L.word;
       SELF.vec  := L.vec;
       SELF.docs := addvecsets(L.docs,R.docs);
     END;
 
-    out := ROLLUP(svb,LEFT.docs.text = RIGHT.docs.text,t(LEFT,RIGHT));
+    //out := ROLLUP(svb,TRUE,t(LEFT,RIGHT));
 
-    RETURN TABLE(out,{DATASET(wrecnew) docs := out.docs});
+    //RETURN TABLE(out,{DATASET(wrec) docs := out.docs});
+
+    RETURN addvecsets(svb[1].docs,svb[2].docs);
 
   END;
 
