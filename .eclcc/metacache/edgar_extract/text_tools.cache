@@ -2,5 +2,6 @@
 <Attr module="EDGAR_Extract" name="text_tools">
  <Depend module="EDGAR_Extract" name="extract_layout_modified"/>
  <Depend module="EDGAR_Extract" name="xbrl_extract_modified"/>
+ <Depend module="std" name="str"/>
 </Attr>
 </Cache>

@@ -1,4 +1,5 @@
 IMPORT * FROM EDGAR_Extract;
+IMPORT STD;
 
 EXPORT Text_Tools := MODULE
     
@@ -25,16 +26,22 @@ EXPORT Text_Tools := MODULE
     END;
     rec2 := RECORD
         STRING text;
+        //changes for label inclusion
+        //STRING label;
     END;
+    //EXPORT (SET OF STRING) Concat(DATASET(rec2) File,STRING kDelimiter = ' ') := FUNCTION
     EXPORT STRING Concat(DATASET(rec2) File,STRING kDelimiter = ' ') := FUNCTION
         StringRec := RECORD
             STRING   text;
+            //STRING label;
         END;
         StringRec MakeStringRec(StringRec l, StringRec r, STRING sep) := TRANSFORM
             SELF.text := l.text + IF(l.text != '',sep,'') + r.text;
+            //SELF.label := l.label;
         END;
         txtconcat := ROLLUP(File,TRUE,MakeStringRec(LEFT,RIGHT,kDelimiter));
         RETURN txtconcat[1].text;
+        //RETURN [txtconcat[1].text,txtconcat[1].label];
     END;
     EXPORT FixTextBlock(DATASET(Extract_Layout_modified.Entry_clean) ent) := FUNCTION
       
@@ -94,6 +101,70 @@ EXPORT Text_Tools := MODULE
         Final := PROJECT(File,cvthtml(LEFT));
         RETURN Final;
     END;
+
+    EXPORT label_filings(Extract_Layout_modified.Main extractedFiles) := FUNCTION
+        grablabel(STRING fname) := FUNCTION
+            splitname := STD.Str.SplitWords(fname,'_',FALSE);
+            label_withxml := splitname[4];
+            lwx_splitondot := STD.Str.SplitWords(label_withxml,'.',FALSE);
+            label := lwx_splitondot[1];
+            RETURN label;
+        END;
+        
+        label_rec := RECORD
+            STRING  fileName;
+            UNICODE accessionNumber;
+            UNICODE name;
+            UNICODE filingType;
+            UNICODE filingDate;
+            UNICODE reportPeriod;
+            UNICODE is_smallbiz;
+            UNICODE pubfloat;
+            UNICODE wellknown;
+            UNICODE shell;
+            UNICODE centralidxkey;
+            UNICODE amendflag;
+            UNICODE filercat;
+            UNICODE fyfocus;
+            UNICODE fpfocus;
+            UNICODE emerging;
+            UNICODE volfilers;
+            UNICODE currentstat;
+            UNICODE fyend;
+            STRING  sent_label;
+            DATASET(Extract_Layout_modified.Entry_clean) values;
+        END;        
+
+        label_rec addlabelfield(Extract_Layout_modified.Main f):= TRANSFORM
+            SELF.fileName := f.fileName;
+            SELF.accessionNumber := f.accessionNumber;
+            SELF.name := f.name;
+            SELF.filingType := f.filingType;
+            SELF.filingDate := f.filingDate;
+            SELF.reportPeriod := f.reportPeriod;
+            SELF.is_smallbiz := f.is_smallbiz;
+            SELF.pubfloat := f.pubfloat;
+            SELF.wellknown := f.wellknown;
+            SELF.shell := f.shell;
+            SELF.centralidxkey := f.centralidxkey;
+            SELF.amendflag := f.amendflag;
+            SELF.filercat := f.filercat;
+            SELF.fyfocus := f.fyfocus;
+            SELF.fpfocus := f.fpfocus;
+            SELF.emerging := f.emerging;
+            SELF.volfilers := f.volfilers;
+            SELF.currentstat := f.currentstat;
+            SELF.fyend := f.fyend;
+            SELF.sent_label := grablabel(f.fileName);
+            SELF.values := f.values;
+        END;
+
+
+        out := PROJECT(extractedFiles,addlabelfield(LEFT));
+
+        RETURN out;
+    END;
+
     EXPORT sep_sents(STRING inString) := FUNCTION
         pattern endpunct := ['.','?','!'];
         pattern ws       := ' ';
