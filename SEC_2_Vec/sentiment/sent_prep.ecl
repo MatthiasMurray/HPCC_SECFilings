@@ -22,6 +22,8 @@ EXPORT sent_prep(STRING docPath) := MODULE
 
   EXPORT n := COUNT(dSentences);
 
+
+  //FIXME: are we counting through sentences too many times?
   EXPORT tf(STRING term,STRING document) := FUNCTION
     REAL8 tf_indoc := STD.Str.CountWords(document,term,TRUE)-1;
     RETURN tf_indoc;

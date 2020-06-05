@@ -1,5 +1,5 @@
 <Cache hash="-1774118299322417331">
 <Attr module="SEC_2_Vec.sentiment" name="sent_test">
- <Depend module="SEC_2_Vec.sentiment" name="sent_setup"/>
+ <Depend module="SEC_2_Vec.sentiment" name="sent_setup_norm"/>
 </Attr>
 </Cache>

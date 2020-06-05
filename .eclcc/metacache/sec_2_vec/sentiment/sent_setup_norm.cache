@@ -1,0 +1,8 @@
+<Cache hash="-1774118299322417331">
+<Attr module="SEC_2_Vec.sentiment" name="sent_setup_norm">
+ <Depend module="TextVectors" name="types"/>
+ <Depend module="SEC_2_Vec.sentiment" name="sent_prep"/>
+ <Depend module="std" name="str"/>
+ <Depend module="TextVectors" name="sentencevectors"/>
+</Attr>
+</Cache>
