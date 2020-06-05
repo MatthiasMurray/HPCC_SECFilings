@@ -26,10 +26,8 @@ EXPORT Text_Tools := MODULE
     END;
     rec2 := RECORD
         STRING text;
-        //changes for label inclusion
-        //STRING label;
     END;
-    //EXPORT (SET OF STRING) Concat(DATASET(rec2) File,STRING kDelimiter = ' ') := FUNCTION
+    
     EXPORT STRING Concat(DATASET(rec2) File,STRING kDelimiter = ' ') := FUNCTION
         StringRec := RECORD
             STRING   text;
@@ -43,6 +41,23 @@ EXPORT Text_Tools := MODULE
         RETURN txtconcat[1].text;
         //RETURN [txtconcat[1].text,txtconcat[1].label];
     END;
+
+    //DECIDED TO JUST BUILD A LABEL VERSION OF CONCAT
+    EXPORT concatlblrec := RECORD
+        STRING text;
+        STRING label;
+    END;
+    
+    EXPORT concatlblrec lblConcat(DATASET(concatlblrec) File,STRING kDelimiter = ' ') := FUNCTION
+        concatlblrec lbl_with_concat(concatlblrec l,concatlblrec r, STRING sep) := TRANSFORM
+            SELF.text := l.text + IF(l.text != '',sep,'') + r.text;
+            SELF.label := l.label;
+        END;
+
+        lbltxtconcat := ROLLUP(File,TRUE,lbl_with_concat(LEFT,RIGHT,kDelimiter));
+        RETURN lbltxtconcat;
+    END;
+    
     EXPORT FixTextBlock(DATASET(Extract_Layout_modified.Entry_clean) ent) := FUNCTION
       
       outrec := RECORD
@@ -164,7 +179,10 @@ EXPORT Text_Tools := MODULE
 
         RETURN out;
     END;
+    
 
+    //FIXME: Work on revised version that keeps labels
+    //EXPORT sep_sents_lbl()
     EXPORT sep_sents(STRING inString) := FUNCTION
         pattern endpunct := ['.','?','!'];
         pattern ws       := ' ';
