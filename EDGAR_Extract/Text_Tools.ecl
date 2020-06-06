@@ -31,15 +31,12 @@ EXPORT Text_Tools := MODULE
     EXPORT STRING Concat(DATASET(rec2) File,STRING kDelimiter = ' ') := FUNCTION
         StringRec := RECORD
             STRING   text;
-            //STRING label;
         END;
         StringRec MakeStringRec(StringRec l, StringRec r, STRING sep) := TRANSFORM
             SELF.text := l.text + IF(l.text != '',sep,'') + r.text;
-            //SELF.label := l.label;
         END;
         txtconcat := ROLLUP(File,TRUE,MakeStringRec(LEFT,RIGHT,kDelimiter));
         RETURN txtconcat[1].text;
-        //RETURN [txtconcat[1].text,txtconcat[1].label];
     END;
 
     //DECIDED TO JUST BUILD A LABEL VERSION OF CONCAT
@@ -49,12 +46,29 @@ EXPORT Text_Tools := MODULE
     END;
     
     EXPORT concatlblrec lblConcat(DATASET(concatlblrec) File,STRING kDelimiter = ' ') := FUNCTION
+        sortFile := SORT(File,File.label);
+        grplbl   := GROUP(sortFile,label);
+
+        //FIXME: THIS NEEDS TO BE GROUP ROLLED
+        //OR ALL LABELS WILL COLLAPSE THIS
+        //VERSION NEEDS TESTING, NOT SURE IF
+        //GROUP ROLLUP USED CORRECTLY
+        //concatlblrec lblconcat_grp(concatlblrec l,DATASET(concatlblrec) allRows) := TRANSFORM
+        //    SELF.text := l.text + IF(l.text != '',sep,'') + allRows.text;
+        //    SELF.label:= l.label;
+        //END;
+
+        //grplbltxtconcat := ROLLUP(File,GROUP,lblconcat_grp(LEFT,ROWS(LEFT)));
+        
+        
         concatlblrec lbl_with_concat(concatlblrec l,concatlblrec r, STRING sep) := TRANSFORM
             SELF.text := l.text + IF(l.text != '',sep,'') + r.text;
             SELF.label := l.label;
         END;
 
         lbltxtconcat := ROLLUP(File,TRUE,lbl_with_concat(LEFT,RIGHT,kDelimiter));
+        
+        //RETURN grplbltxtconcat;
         RETURN lbltxtconcat;
     END;
     
@@ -181,8 +195,6 @@ EXPORT Text_Tools := MODULE
     END;
     
 
-    //FIXME: Work on revised version that keeps labels
-    //EXPORT sep_sents_lbl()
     EXPORT sep_sents(STRING inString) := FUNCTION
         pattern endpunct := ['.','?','!'];
         pattern ws       := ' ';
@@ -198,7 +210,7 @@ EXPORT Text_Tools := MODULE
         END;
 
         F := DATASET([{inString}],inrec);
-        
+
         parserec := RECORD
             UNSIGNED8 ones  := 1;
             UNSIGNED8 sentId:= 0; 
@@ -226,5 +238,54 @@ EXPORT Text_Tools := MODULE
         END;
 
         RETURN TABLE(sentlist,finalrec);
+    END;
+
+    //FIXME: CHANGES MADE NOW THAT WE ARE USING GROUP ROLLUP.
+    //REQUIRES TESTING.
+    EXPORT sep_sents_lbl(DATASET(concatlblrec) cr) := FUNCTION
+        pattern endpunct := ['.','?','!'];
+        pattern ws       := ' ';
+        pattern mess     := PATTERN('[A-Z]') (ANY NOT IN endpunct)+;
+        pattern sentence := mess endpunct ;
+        pattern begsent  := '[OPN]' sentence ws PATTERN('[A-Z]') OPT('[CLS]');
+        pattern midsent  := endpunct ws sentence ws PATTERN('[A-Z]');
+        pattern endsent  := OPT('[OPN]') OPT(endpunct ws) sentence '[CLS]';
+        rule    nicesent := begsent|midsent|endsent;
+        
+        
+        
+        lblOutrec := RECORD
+          UNSIGNED8 ones;
+          UNSIGNED8 sentId;
+          STRING sentence;
+          STRING label;
+        END;
+
+        
+
+        lblOutrec lblParseT(RECORDOF(cr) f) := TRANSFORM
+            SELF.ones := 1;
+            SELF.sentId:= 0;
+            SELF.sentence:= MATCHTEXT(nicesent/sentence);
+            SELF.label := f.label;
+        END;
+
+        //lblSentparse := DEDUP(PARSE(lblF,text,nicesent,lblParserec,SCAN));
+        lblSentparse := PARSE(cr,text,nicesent,lblParseT(LEFT),SCAN);
+
+        lblOutrec lblConsec(lblOutrec L,lblOutrec R) := TRANSFORM
+          SELF.sentId := L.sentId + R.ones;
+          SELF := R;
+        END;
+
+        lblSentlist := ITERATE(lblSentparse,lblConsec(LEFT,RIGHT));
+
+        lblFinalrec := RECORD
+          UNSIGNED8 sentId := lblSentlist.sentId;
+          STRING text := lblSentlist.sentence;
+          STRING label := lblSentlist.label;
+        END;
+
+        RETURN TABLE(lblSentlist,lblFinalrec);
     END;
 END;

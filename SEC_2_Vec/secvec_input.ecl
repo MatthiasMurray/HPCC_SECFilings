@@ -101,6 +101,9 @@ EXPORT secvec_input(STRING inpath) := FUNCTION
         STRING text := tb.content;
     END;
 
+    //testtextvec_input_lbl := sep_sents_lbl(lblConcat(TABLE(tb,outrec)));
     testtextvec_input := sep_sents(Concat(TABLE(tb,outrec)));
+    
+    //RETURN testtextvec_input_lbl;
     RETURN testtextvec_input;
 END;
