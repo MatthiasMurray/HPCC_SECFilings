@@ -1,0 +1,5 @@
+<Cache hash="6138401623111794519">
+<Attr module="std" name="blas">
+ <Depend name="lib_eclblas"/>
+</Attr>
+</Cache>

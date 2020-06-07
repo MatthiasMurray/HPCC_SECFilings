@@ -5,5 +5,6 @@
  <Depend module="ML_Core" name="types"/>
  <Depend module="SEC_2_Vec" name="secvec_input_lbl"/>
  <Depend module="TextVectors" name="sentencevectors"/>
+ <Depend module="LogisticRegression" name="binomiallogisticregression"/>
 </Attr>
 </Cache>
