@@ -1,0 +1,9 @@
+<Cache hash="6138401623111794519">
+<Attr module="SEC_2_Vec.sentiment" name="sent_model">
+ <Depend module="TextVectors" name="types"/>
+ <Depend module="" name="types"/>
+ <Depend module="ML_Core" name="types"/>
+ <Depend module="SEC_2_Vec" name="secvec_input_lbl"/>
+ <Depend module="TextVectors" name="sentencevectors"/>
+</Attr>
+</Cache>
