@@ -159,8 +159,13 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
   EXPORT sembed_grp := FUNCTION
     svb := sent_vecs_byword_norm;
 
-    svb_ordered := SORT(svb,svb.sentId);
-    svb_grp := GROUP(svb_ordered,sentId);
+    //svb_ordered := SORT(svb,svb.sentId);
+    //svb_grp := GROUP(svb_ordered,sentId);
+    svb_sent1 := svb(sentId=1);
+    svb1 := GROUP(svb_sent1,sentId);
+    svb_sent2 := svb(sentId=2);
+    svb2 := GROUP(svb_sent2,sentId);
+    svb_grp := REGROUP(svb1,svb2);
 
     svb grpaddvecs(svb L,svb R) := TRANSFORM
       SELF.word := L.word;
@@ -177,11 +182,32 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
       SELF.sentId := L.sentId;
       SELF.text := L.text;
       SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT)).w_Vector;
+      SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT))[1].w_Vector;
     END;
 
     out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
 
+    RETURN out;
+  END;
+
+  EXPORT wrec := RECORD
+    STRING word;
+    UNSIGNED8 sentId;
+    STRING text;
+    REAL8 tfidf_score;
+    t_Vector w_Vector;
+  END;
+
+  EXPORT totalvec(DATASET(wrec) sgrp) := FUNCTION
+    wrec grpaddvecsT(wrec L,wrec R) := TRANSFORM
+      SELF.word := L.word;
+      SELF.sentId := L.sentId;
+      SELF.text := L.text;
+      SELF.tfidf_score := L.tfidf_score;
+      SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
+    END;
+
+    out := ROLLUP(sgrp,TRUE,grpaddvecsT(LEFT,RIGHT))[1].w_Vector;
     RETURN out;
   END;
 
@@ -191,13 +217,13 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
     svb_ordered := SORT(svb,svb.sentId);
     svb_grp := GROUP(svb_ordered,sentId);
 
-    svb grpaddvecs(svb L,svb R) := TRANSFORM
-      SELF.word := L.word;
-      SELF.sentId := L.sentId;
-      SELF.text := L.text;
-      SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-    END;
+    // svb grpaddvecs(svb L,svb R) := TRANSFORM
+    //   SELF.word := L.word;
+    //   SELF.sentId := L.sentId;
+    //   SELF.text := L.text;
+    //   SELF.tfidf_score := L.tfidf_score;
+    //   SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
+    // END;
 
     svbrec := RECORDOF(svb);
 
@@ -206,7 +232,8 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
       SELF.sentId := L.sentId;
       SELF.text := L.text;
       SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT)).w_Vector;
+      SELF.w_Vector := totalvec(R);
+      //SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT)).w_Vector;
     END;
 
     out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));

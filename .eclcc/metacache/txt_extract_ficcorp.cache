@@ -1,4 +1,4 @@
-<Cache hash="212830741268194921">
+<Cache hash="-1774118299322417331">
 <Attr name="txt_extract_ficcorp">
  <Depend module="EDGAR_Extract" name="text_tools"/>
  <Depend module="TextVectors" name="sentencevectors"/>

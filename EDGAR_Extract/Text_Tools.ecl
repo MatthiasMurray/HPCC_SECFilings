@@ -2,7 +2,6 @@ IMPORT * FROM EDGAR_Extract;
 IMPORT STD;
 
 EXPORT Text_Tools := MODULE
-    
     EXPORT CashParse(STRING File) := FUNCTION
 
         rec1 := {STRING content};
@@ -24,7 +23,8 @@ EXPORT Text_Tools := MODULE
         casheqparse := PARSE(F,content,txtblock,outrec,SCAN);
         RETURN casheqparse;
     END;
-    rec2 := RECORD
+
+    EXPORT rec2 := RECORD
         STRING text;
     END;
     
@@ -39,7 +39,6 @@ EXPORT Text_Tools := MODULE
         RETURN txtconcat[1].text;
     END;
 
-    //DECIDED TO JUST BUILD A LABEL VERSION OF CONCAT
     EXPORT concatlblrec := RECORD
         STRING text;
         STRING label;
@@ -49,27 +48,14 @@ EXPORT Text_Tools := MODULE
         sortFile := SORT(File,File.label);
         grplbl   := GROUP(sortFile,label);
 
-        //FIXME: THIS NEEDS TO BE GROUP ROLLED
-        //OR ALL LABELS WILL COLLAPSE THIS
-        //VERSION NEEDS TESTING, NOT SURE IF
-        //GROUP ROLLUP USED CORRECTLY
-        //concatlblrec lblconcat_grp(concatlblrec l,DATASET(concatlblrec) allRows) := TRANSFORM
-        //    SELF.text := l.text + IF(l.text != '',sep,'') + allRows.text;
-        //    SELF.label:= l.label;
-        //END;
-
-        //grplbltxtconcat := ROLLUP(File,GROUP,lblconcat_grp(LEFT,ROWS(LEFT)));
-        
-        
-        concatlblrec lbl_with_concat(concatlblrec l,concatlblrec r, STRING sep) := TRANSFORM
-            SELF.text := l.text + IF(l.text != '',sep,'') + r.text;
-            SELF.label := l.label;
+        concatlblrec lblconcat_grp(concatlblrec l,DATASET(concatlblrec) allRows) := TRANSFORM
+            SELF.text := Concat(TABLE(allRows,{STRING text := allRows.text}),kDelimiter);
+            SELF.label:= l.label;
         END;
 
-        lbltxtconcat := ROLLUP(File,TRUE,lbl_with_concat(LEFT,RIGHT,kDelimiter));
+        grplbltxtconcat := ROLLUP(grplbl,GROUP,lblconcat_grp(LEFT,ROWS(LEFT)));
         
-        //RETURN grplbltxtconcat;
-        RETURN lbltxtconcat;
+        RETURN grplbltxtconcat;
     END;
     
     EXPORT FixTextBlock(DATASET(Extract_Layout_modified.Entry_clean) ent) := FUNCTION
@@ -85,6 +71,7 @@ EXPORT Text_Tools := MODULE
       Result := TABLE(ent,outrec,element);
       RETURN Result;
     END;
+
     EXPORT XBRL_HTML_File(STRING fileName) := FUNCTION
         File := XBRL_Extract_modified.File(fileName);
         
@@ -131,38 +118,38 @@ EXPORT Text_Tools := MODULE
         RETURN Final;
     END;
 
-    EXPORT label_filings(Extract_Layout_modified.Main extractedFiles) := FUNCTION
+    EXPORT label_rec := RECORD
+        STRING  fileName;
+        UNICODE accessionNumber;
+        UNICODE name;
+        UNICODE filingType;
+        UNICODE filingDate;
+        UNICODE reportPeriod;
+        UNICODE is_smallbiz;
+        UNICODE pubfloat;
+        UNICODE wellknown;
+        UNICODE shell;
+        UNICODE centralidxkey;
+        UNICODE amendflag;
+        UNICODE filercat;
+        UNICODE fyfocus;
+        UNICODE fpfocus;
+        UNICODE emerging;
+        UNICODE volfilers;
+        UNICODE currentstat;
+        UNICODE fyend;
+        STRING  label;
+        DATASET(Extract_Layout_modified.Entry_clean) values;
+    END;    
+
+    EXPORT label_rec label_filings(DATASET(Extract_Layout_modified.Main) extractedFiles) := FUNCTION
         grablabel(STRING fname) := FUNCTION
             splitname := STD.Str.SplitWords(fname,'_',FALSE);
             label_withxml := splitname[4];
             lwx_splitondot := STD.Str.SplitWords(label_withxml,'.',FALSE);
             label := lwx_splitondot[1];
             RETURN label;
-        END;
-        
-        label_rec := RECORD
-            STRING  fileName;
-            UNICODE accessionNumber;
-            UNICODE name;
-            UNICODE filingType;
-            UNICODE filingDate;
-            UNICODE reportPeriod;
-            UNICODE is_smallbiz;
-            UNICODE pubfloat;
-            UNICODE wellknown;
-            UNICODE shell;
-            UNICODE centralidxkey;
-            UNICODE amendflag;
-            UNICODE filercat;
-            UNICODE fyfocus;
-            UNICODE fpfocus;
-            UNICODE emerging;
-            UNICODE volfilers;
-            UNICODE currentstat;
-            UNICODE fyend;
-            STRING  sent_label;
-            DATASET(Extract_Layout_modified.Entry_clean) values;
-        END;        
+        END;    
 
         label_rec addlabelfield(Extract_Layout_modified.Main f):= TRANSFORM
             SELF.fileName := f.fileName;
@@ -184,17 +171,15 @@ EXPORT Text_Tools := MODULE
             SELF.volfilers := f.volfilers;
             SELF.currentstat := f.currentstat;
             SELF.fyend := f.fyend;
-            SELF.sent_label := grablabel(f.fileName);
+            SELF.label := grablabel(f.fileName);
             SELF.values := f.values;
         END;
-
 
         out := PROJECT(extractedFiles,addlabelfield(LEFT));
 
         RETURN out;
     END;
     
-
     EXPORT sep_sents(STRING inString) := FUNCTION
         pattern endpunct := ['.','?','!'];
         pattern ws       := ' ';
@@ -240,8 +225,6 @@ EXPORT Text_Tools := MODULE
         RETURN TABLE(sentlist,finalrec);
     END;
 
-    //FIXME: CHANGES MADE NOW THAT WE ARE USING GROUP ROLLUP.
-    //REQUIRES TESTING.
     EXPORT sep_sents_lbl(DATASET(concatlblrec) cr) := FUNCTION
         pattern endpunct := ['.','?','!'];
         pattern ws       := ' ';
@@ -251,17 +234,13 @@ EXPORT Text_Tools := MODULE
         pattern midsent  := endpunct ws sentence ws PATTERN('[A-Z]');
         pattern endsent  := OPT('[OPN]') OPT(endpunct ws) sentence '[CLS]';
         rule    nicesent := begsent|midsent|endsent;
-        
-        
-        
+               
         lblOutrec := RECORD
           UNSIGNED8 ones;
           UNSIGNED8 sentId;
           STRING sentence;
           STRING label;
         END;
-
-        
 
         lblOutrec lblParseT(RECORDOF(cr) f) := TRANSFORM
             SELF.ones := 1;
@@ -270,7 +249,6 @@ EXPORT Text_Tools := MODULE
             SELF.label := f.label;
         END;
 
-        //lblSentparse := DEDUP(PARSE(lblF,text,nicesent,lblParserec,SCAN));
         lblSentparse := PARSE(cr,text,nicesent,lblParseT(LEFT),SCAN);
 
         lblOutrec lblConsec(lblOutrec L,lblOutrec R) := TRANSFORM

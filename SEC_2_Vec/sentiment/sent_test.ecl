@@ -10,4 +10,5 @@ ssn := sent_setup_norm(path);
 //OUTPUT(ssn.sent_embed,ALL,NAMED('Tech_Sent_Embeds_All_NormRun'));
 //OUTPUT(ssn.tf_withvecs_norm,ALL,NAMED('Checking_Join_Norm'));
 //OUTPUT(ssn.sent_roll(1),NAMED('sentence_1_embed'));
-OUTPUT(ssn.sembed_grp,NAMED('sentembed_grouprollup'));
+//OUTPUT(ssn.sembed_grp,NAMED('sentembed_grouprollup'));
+OUTPUT(ssn.sembed_grp_experimental,NAMED('experimental_sembed'));
