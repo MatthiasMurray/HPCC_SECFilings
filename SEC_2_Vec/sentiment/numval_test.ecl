@@ -86,5 +86,5 @@ OUTPUT(CHOOSEN(X,1000),NAMED('traindat_nf_form'));
 OUTPUT(blr_mod,NAMED('binomial_mod'));
 //OUTPUT(blr_rprt,NAMED('binomial_mod_report'));
 //OUTPUT(blr_rprt_small,NAMED('small_binomial_report'));
-OUTPUT(confusion,NAMED('confusion_matrix'));
-OUTPUT(predicts,NAMED('predicts'));
+OUTPUT(confusion,ALL,NAMED('confusion_matrix'));
+OUTPUT(predicts,ALL,NAMED('predicts'));
