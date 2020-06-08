@@ -54,54 +54,55 @@ EXPORT sent_model := MODULE
         RETURN out;
     END;
     
-    EXPORT getNumericField(trainrec tr) := FUNCTION
+    EXPORT numval := RECORD
+        UNSIGNED4 number;
+        REAL8 value;
+    END;
 
-        numval := RECORD
-            UNSIGNED4 number;
-            REAL8 value;
-        END;        
-        
-        
-        numval tvec_to_numval(tv.Types.t_Vector vv) := FUNCTION
+    EXPORT numval tvec_to_numval(tv.Types.t_Vector vv) := FUNCTION
 
-            invec:=DATASET(vv,{REAL8 value});
+        invec:=DATASET(vv,{REAL8 value});
 
             
-            midrec := RECORD
-                UNSIGNED4 one;
-                UNSIGNED4 number;
-                REAL8 value;
-            END;
-            midrec midT(RECORDOF(invec) v) := TRANSFORM
-                SELF.one := 1;
-                SELF.number := 0;
-                SELF.value := v.value;
-            END;
-            mid1 := PROJECT(invec,midT(LEFT));
-            midrec consec(midrec L,midrec R) := TRANSFORM
-                SELF.number := L.number + R.one;
-                SELF := R;
-            END;
-            mid2 := ITERATE(mid1,consec(LEFT,RIGHT));
-            outrec := RECORD
-                UNSIGNED4 number;
-                REAL8 value;
-            END;
-            outrec outT(midrec m2) := TRANSFORM
-                SELF.number := m2.number;
-                SELF.value := m2.value;
-            END;
-            out := PROJECT(mid2,outT(LEFT));
-            RETURN out;
+        midrec := RECORD
+            UNSIGNED4 one;
+            UNSIGNED4 number;
+            REAL8 value;
         END;
+        midrec midT(RECORDOF(invec) v) := TRANSFORM
+            SELF.one := 1;
+            SELF.number := 0;
+            SELF.value := v.value;
+        END;
+        mid1 := PROJECT(invec,midT(LEFT));
+        midrec consec(midrec L,midrec R) := TRANSFORM
+            SELF.number := L.number + R.one;
+            SELF := R;
+        END;
+        mid2 := ITERATE(mid1,consec(LEFT,RIGHT));
+        outrec := RECORD
+            UNSIGNED4 number;
+            REAL8 value;
+        END;
+        outrec outT(midrec m2) := TRANSFORM
+            SELF.number := m2.number;
+            SELF.value := m2.value;
+        END;
+        out := PROJECT(mid2,outT(LEFT));
+        RETURN out;
+    END;
 
-        firstrec := RECORD
-            UNSIGNED2 wi;
-            UNSIGNED8 id;
-            DATASET(numval) numvals;
-        END;
+    EXPORT nf_firstrec := RECORD
+        UNSIGNED2 wi;
+        UNSIGNED8 id;
+        DATASET(numval) numvals;
+    END;
+
+    EXPORT getNumericField(trainrec tr) := FUNCTION
         
-        firstrec firstT(trainrec tr_Row) := TRANSFORM
+        
+
+        nf_firstrec firstT(trainrec tr_Row) := TRANSFORM
         //mlTypes.NumericField firstT(trainrec t) := TRANSFORM
             SELF.wi := 1;
             SELF.id := 0;
