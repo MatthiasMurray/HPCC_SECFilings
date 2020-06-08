@@ -1,5 +1,10 @@
 <Cache hash="6138401623111794519">
 <Attr module="SEC_2_Vec.sentiment" name="numval_test">
  <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
+ <Depend module="ML_Core" name="types"/>
+ <Depend module="ML_Core" name="tofield"/>
+ <Depend module="LogisticRegression" name="binomiallogisticregression"/>
+ <Depend module="LogisticRegression" name="constants"/>
+ <Depend module="LogisticRegression" name="confusion"/>
 </Attr>
 </Cache>
