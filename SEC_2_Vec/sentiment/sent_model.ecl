@@ -100,8 +100,8 @@ EXPORT sent_model := MODULE
 
     EXPORT getNumericField(trainrec tr) := FUNCTION
         
-        
 
+        
         nf_firstrec firstT(trainrec tr_Row) := TRANSFORM
         //mlTypes.NumericField firstT(trainrec t) := TRANSFORM
             SELF.wi := 1;
