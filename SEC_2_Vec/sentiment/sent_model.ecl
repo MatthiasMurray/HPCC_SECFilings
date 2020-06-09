@@ -98,30 +98,6 @@ EXPORT sent_model := MODULE
         DATASET(numval) numvals;
     END;
 
-    EXPORT getNumericField(trainrec tr) := FUNCTION
-        
-
-        
-        nf_firstrec firstT(trainrec tr_Row) := TRANSFORM
-        //mlTypes.NumericField firstT(trainrec t) := TRANSFORM
-            SELF.wi := 1;
-            SELF.id := 0;
-            SELF.numvals := tvec_to_numval(tr_Row.vec);
-        END;
-
-        step1 := PROJECT(tr,firstT(LEFT));
-        RETURN step1;
-    END;
-    //     mlTypes.NumericField finalT(mlTypes.NumericField s1,mlTypes.NumericField s2) := TRANSFORM
-    //         SELF.id := s1.id + s2.wi;
-    //         SELF := s2;
-    //     END;
-
-    //     out := ITERATE(step1,finalT(LEFT,RIGHT));
-
-    //     RETURN out;
-    // END;
-
     EXPORT train_binlogreg(trainrec tr) := FUNCTION
 
         trainDatrec := RECORD

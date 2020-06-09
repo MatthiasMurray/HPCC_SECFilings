@@ -5,6 +5,5 @@
  <Depend module="ML_Core" name="tofield"/>
  <Depend module="LogisticRegression" name="binomiallogisticregression"/>
  <Depend module="LogisticRegression" name="constants"/>
- <Depend module="LogisticRegression" name="confusion"/>
 </Attr>
 </Cache>

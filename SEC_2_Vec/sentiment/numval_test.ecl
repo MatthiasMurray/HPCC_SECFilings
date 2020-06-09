@@ -3,9 +3,15 @@ IMPORT * FROM ML_Core;
 IMPORT TextVectors as tv;
 IMPORT LogisticRegression AS LR;
 
-path := '~ncf::edgarfilings::raw::tech10qs_medium';
-dat := sent_model.trndata_wlbl(path,FALSE);
+//path := '~ncf::edgarfilings::raw::tech10qs_medium';
+//path_w_labels := '~ncf::edgarfilings::raw::tech_10qs_medium_withlabels';
+path := '~ncf::edgarfilings::raw::labels_allsecs_medium';
+
+alldat := sent_model.trndata_wlbl(path);
+dat := alldat(label='0')+alldat(label='1')[1..20];
+
 vec1 := dat[1].vec;
+
 nv1 := sent_model.tvec_to_numval(vec1);
 
 trainrec := sent_model.trainrec;
@@ -47,28 +53,14 @@ lblintrec lblintT(trainrec t,INTEGER C) := TRANSFORM
 END;
 
 output_tofield := PROJECT(dat,lblintT(LEFT,COUNTER));
+
 Y := PROJECT(output_tofield,TRANSFORM(ML_Core.Types.DiscreteField,SELF.wi := 1,SELF.value := LEFT.label,SELF.id := LEFT.rowid,SELF.number := 1));
-// withrowrec := RECORD(vecrec)
-//     UNSIGNED rownum;
-// END;
-
-// finalrec := RECORD
-//     UNSIGNED rowid;
-//     DATASET(withrowrec) fullform;
-// END;
-
-// finalrec finalT(vecdsrec vad) := TRANSFORM
-//     SELF.rowid := vad.rowid;
-//     SELF.fullform := DATASET([1] + vad.vecds,{UNSIGNED rownum,RECORD(vecrec) value});
-// END;
-
 
 ML_Core.ToField(input_tofield,X);
 blr := LR.BinomialLogisticRegression(100,0.00000001,LR.Constants.default_ridge);
 blr_mod := blr.getModel(X,Y);
-//blr_rprt := blr.Report(blr_mod,X,Y);
+blr_rprt := blr.Report(blr_mod,X,Y);
 plainblr := LR.BinomialLogisticRegression();
-//blr_rprt_small := plainblr.Report(blr_mod,X(id=1),Y(id=1));
 blr_classify := plainblr.Classify(blr_mod,X);
 
 ML_Core.Types.DiscreteField class_to_discreteT(RECORDOF(blr_classify) bc) := TRANSFORM
@@ -78,13 +70,8 @@ ML_Core.Types.DiscreteField class_to_discreteT(RECORDOF(blr_classify) bc) := TRA
     SELF.value := bc.value;
 END;
 predicts := PROJECT(blr_classify,class_to_discreteT(LEFT));
-confusion := LR.Confusion(Y,predicts);
+//confusion := LR.Confusion(Y,predicts);
 
-OUTPUT(dat,NAMED('trnlbl_test'));
-OUTPUT(nv1,NAMED('numval1_test'));
-OUTPUT(CHOOSEN(X,1000),NAMED('traindat_nf_form'));
 OUTPUT(blr_mod,NAMED('binomial_mod'));
-//OUTPUT(blr_rprt,NAMED('binomial_mod_report'));
-//OUTPUT(blr_rprt_small,NAMED('small_binomial_report'));
-OUTPUT(confusion,ALL,NAMED('confusion_matrix'));
+OUTPUT(blr_rprt,NAMED('binomial_mod_report'));
 OUTPUT(predicts,ALL,NAMED('predicts'));

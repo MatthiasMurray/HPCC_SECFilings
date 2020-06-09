@@ -1,6 +1,5 @@
 <Cache hash="6138401623111794519">
-<Attr name="clean_extract">
+<Attr module="SEC_2_Vec.sentiment" name="single0extract">
  <Depend module="EDGAR_Extract" name="text_tools"/>
- <Depend module="SEC_2_Vec" name="secvec_input_lbl"/>
 </Attr>
 </Cache>

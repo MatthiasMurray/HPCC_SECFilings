@@ -23,21 +23,21 @@ EXPORT Extract_Layout_modified := MODULE
   EXPORT Main := RECORD
     STRING      fileName;
     UNICODE     accessionNumber;
-    UNICODE     name;
-    UNICODE     filingType;
+    //UNICODE     name;
+    //UNICODE     filingType;
     UNICODE     filingDate;
     UNICODE     reportPeriod;
-    UNICODE     is_smallbiz;
+    //UNICODE     is_smallbiz;
     UNICODE     pubfloat;
     //UNICODE     comsharesout;
     UNICODE     wellknown;
-    UNICODE     shell;
+    //UNICODE     shell;
     UNICODE     centralidxkey;
     UNICODE     amendflag;
-    UNICODE     filercat;
+    //UNICODE     filercat;
     UNICODE     fyfocus;
     UNICODE     fpfocus;
-    UNICODE     emerging;
+    //UNICODE     emerging;
     //UNICODE     ticker;
     UNICODE     volfilers;
     UNICODE     currentstat;
