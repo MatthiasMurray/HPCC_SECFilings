@@ -8,19 +8,23 @@ EXPORT Text_Tools := MODULE
         F := DATASET([{File}],rec1);
 
         pattern mess   := ANY NOT IN ['<','>'];
-        pattern fmttag := '<span' mess+ '>';
-        pattern divtag := '<div' mess+ '>';
+        pattern fmttag := '<span' mess+ '>'|'<span>';
+        pattern divtag := '<div' mess+ '>'|'<div>';
+        pattern optag := fmttag | divtag;
         pattern fmtend := '</span>';
         pattern divend := '</div>';
-        pattern txtblk := (ANY NOT IN ['<','>',divtag,divend])+;
+        pattern endtag := fmtend | divend;
+        pattern txtblk := (ANY NOT IN ['<','>',divtag,divend,fmttag,fmtend])+;
         pattern fmtpat := fmttag txtblk fmtend;
         rule txtblock  := fmtpat;
 
         outrec := RECORD
+            //STRING text := MATCHTEXT(blkpat/fmtpat/txtblk);
             STRING text := MATCHTEXT(fmtpat/txtblk);
+            //STRING text := MATCHTEXT(txtblk)
         END;
 
-        casheqparse := PARSE(F,content,txtblock,outrec,SCAN);
+        casheqparse := PARSE(F,content,txtblock,outrec,SCAN ALL);
         RETURN casheqparse;
     END;
 
