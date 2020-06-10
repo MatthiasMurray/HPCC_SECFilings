@@ -1,0 +1,9 @@
+<Cache hash="6138401623111794519">
+<Attr module="SEC_2_Vec.sentiment" name="validate_mod">
+ <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
+ <Depend module="LogisticRegression" name="types"/>
+ <Depend module="LogisticRegression" name="binomiallogisticregression"/>
+ <Depend module="ML_Core" name="types"/>
+ <Depend module="LogisticRegression" name="confusion"/>
+</Attr>
+</Cache>
