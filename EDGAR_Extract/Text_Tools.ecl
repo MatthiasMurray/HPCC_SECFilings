@@ -270,4 +270,56 @@ EXPORT Text_Tools := MODULE
 
         RETURN TABLE(lblSentlist,lblFinalrec);
     END;
+
+    //FIXME: We want money descriptions, not just money!
+    EXPORT MoneyTable(STRING text) := FUNCTION
+    //EXPORT MoneyTable(UNICODE16 text) := FUNCTION
+        pattern num := PATTERN('[0-9]');
+        pattern fullplc := num*3;
+        pattern moncomma := ','|' ';
+        pattern dollartag := ' $'|' $ '|' ';
+        pattern ender := '.'|'!'|'?';
+        //pattern money := dollartag num OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) | '$' num num OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) | '$' num num num OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc);
+        pattern hundreds := dollartag num OPT(num) OPT(num);
+        pattern thousnds := hundreds moncomma fullplc;
+        pattern millions := hundreds moncomma fullplc moncomma fullplc;
+        pattern billions := hundreds moncomma fullplc moncomma fullplc moncomma fullplc;
+        pattern money := hundreds ' ' | thousnds ' ' | millions ' ' | billions ' ';
+        //pattern obelus := '†';
+        pattern obelus := U'†'|U'&dagger;'|U'&#8224;'|U'&#134;'|U'&#x86;';
+        pattern celldescr := (ANY NOT IN [obelus,money,ender])+;
+        pattern year := num*4;
+        //pattern celldescr := (ANY NOT IN ['$',num,','])+ | year;
+        //pattern cell := celldescr obelus money | celldescr money;
+        pattern cell := celldescr money;
+        //pattern tabrow := obelus celldescr obelus cell OPT(cell+) | obelus+ cell obelus+;
+        pattern cell2 := cell;
+        //pattern cells := OPT(cell2)+ cell OPT(cell2)+;
+        pattern cellZ := celldescr cell;
+        pattern infotbl := ender cellZ ' ';//celldescr cell ' ';
+        
+        
+        //rule moneytable := tabrow;
+        rule moneytable := money;
+        //rule moneytable := cell;
+        //rule moneytable := ' ' money;
+        //rule moneytable := obelus;
+        //rule moneytable := infotbl;
+
+        outrec := RECORD
+            //STRING cell := MATCHTEXT(infotbl/cellZ);
+            //STRING cell := MATCHTEXT(infotbl/cells/cell);
+            //UNICODE16 cell := MATCHUNICODE(obelus);
+            //STRING cell := MATCHTEXT(obelus);
+            //STRING cell := MATCHTEXT(cell);
+            STRING cell := MATCHTEXT(money);
+        END;
+
+        rec1 := {STRING content};
+        T := DATASET([{text}],rec1);
+
+        out := PARSE(T,content,moneytable,outrec,SCAN);
+
+        RETURN out;
+    END;
 END;
