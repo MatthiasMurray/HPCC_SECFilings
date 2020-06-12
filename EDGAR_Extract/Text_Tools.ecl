@@ -291,7 +291,8 @@ EXPORT Text_Tools := MODULE
         pattern millions := hundreds moncomma fullplc moncomma fullplc;
         pattern billions := hundreds moncomma fullplc moncomma fullplc moncomma fullplc;
         pattern money := hundreds ' ' | thousnds ' ' | millions ' ' | billions ' ';
-        pattern obelus := '†';
+        pattern obelus := u'\u2020';
+        //pattern obelus := '†';
         //pattern obelus := U'†'|U'&dagger;'|U'&#8224;'|U'&#134;'|U'&#x86;'|dagdag;//'';
         pattern celldescr := (ANY NOT IN [obelus,money,ender])+;
         pattern year := num*4;
@@ -303,8 +304,9 @@ EXPORT Text_Tools := MODULE
         //pattern cells := OPT(cell2)+ cell OPT(cell2)+;
         pattern cellZ := celldescr cell;
         pattern infotbl := ender cellZ ' ';//celldescr cell ' ';
-        pattern tblrow := celldescr obelus money;
+        //pattern tblrow := celldescr obelus money;
         //pattern tblrow := money obelus;
+        pattern tblrow := obelus money;
         //pattern tblrow := obelus alpha+ obelus;
         
         rule moneytable := tblrow;
@@ -325,11 +327,13 @@ EXPORT Text_Tools := MODULE
             //STRING cell := MATCHTEXT(cell);
             //STRING cell := MATCHTEXT(money);
             //STRING cell := MATCHTEXT(tabrow/cell);
-            STRING cell := MATCHTEXT(tblrow);
+            //STRING cell := MATCHTEXT(tblrow);
+            UNICODE16 cell := MATCHUNICODE(tblrow);
             //STRING cell := MATCHTEXT(tabrow);
         END;
 
         rec1 := {STRING content};
+        //rec1 := {UNICODE16 content};
         T := DATASET([{text}],rec1);
 
         out := PARSE(T,content,moneytable,outrec,SCAN);
