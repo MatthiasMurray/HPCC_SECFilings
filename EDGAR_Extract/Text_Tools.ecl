@@ -274,7 +274,13 @@ EXPORT Text_Tools := MODULE
     //FIXME: We want money descriptions, not just money!
     EXPORT MoneyTable(STRING text) := FUNCTION
     //EXPORT MoneyTable(UNICODE16 text) := FUNCTION
+
+        dagds := DATASET(WORKUNIT('W20200612-024132','Result 1'),{STRING dagger});
+        dagdag := dagds[1].dagger[1];
+
+
         pattern num := PATTERN('[0-9]');
+        pattern alpha := PATTERN('[a-zA-Z]');
         pattern fullplc := num*3;
         pattern moncomma := ','|' ';
         pattern dollartag := ' $'|' $ '|' ';
@@ -285,8 +291,8 @@ EXPORT Text_Tools := MODULE
         pattern millions := hundreds moncomma fullplc moncomma fullplc;
         pattern billions := hundreds moncomma fullplc moncomma fullplc moncomma fullplc;
         pattern money := hundreds ' ' | thousnds ' ' | millions ' ' | billions ' ';
-        //pattern obelus := '†';
-        pattern obelus := U'†'|U'&dagger;'|U'&#8224;'|U'&#134;'|U'&#x86;';
+        pattern obelus := '†';
+        //pattern obelus := U'†'|U'&dagger;'|U'&#8224;'|U'&#134;'|U'&#x86;'|dagdag;//'';
         pattern celldescr := (ANY NOT IN [obelus,money,ender])+;
         pattern year := num*4;
         //pattern celldescr := (ANY NOT IN ['$',num,','])+ | year;
@@ -297,10 +303,15 @@ EXPORT Text_Tools := MODULE
         //pattern cells := OPT(cell2)+ cell OPT(cell2)+;
         pattern cellZ := celldescr cell;
         pattern infotbl := ender cellZ ' ';//celldescr cell ' ';
+        pattern tblrow := celldescr obelus money;
+        //pattern tblrow := money obelus;
+        //pattern tblrow := obelus alpha+ obelus;
         
-        
+        rule moneytable := tblrow;
+        //rule moneytable := celldescr
+        //rule moneytable := obelus cell obelus;
         //rule moneytable := tabrow;
-        rule moneytable := money;
+        //rule moneytable := money;
         //rule moneytable := cell;
         //rule moneytable := ' ' money;
         //rule moneytable := obelus;
@@ -312,7 +323,10 @@ EXPORT Text_Tools := MODULE
             //UNICODE16 cell := MATCHUNICODE(obelus);
             //STRING cell := MATCHTEXT(obelus);
             //STRING cell := MATCHTEXT(cell);
-            STRING cell := MATCHTEXT(money);
+            //STRING cell := MATCHTEXT(money);
+            //STRING cell := MATCHTEXT(tabrow/cell);
+            STRING cell := MATCHTEXT(tblrow);
+            //STRING cell := MATCHTEXT(tabrow);
         END;
 
         rec1 := {STRING content};
