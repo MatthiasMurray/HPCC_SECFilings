@@ -288,7 +288,7 @@ EXPORT Text_Tools := MODULE
         pattern year := num*4;
         pattern datepat := propwrd ' ' num* OPT(',') OPT(' ') year;
         //pattern descriptors := propwrd|acron|punct|year|datepat|' ';
-        pattern descriptors := propwrd|'of'|acron|punct|year|' ';
+        pattern descriptors := propwrd|'of'|acron|punct|year|' '|'(' normwrd|normwrd ')';
         notrule(STRING txt) := txt!='Rule';
         pattern desc := VALIDATE(descriptors,notrule(MATCHTEXT));
 
@@ -320,7 +320,13 @@ EXPORT Text_Tools := MODULE
         //pattern celldescr := (ANY NOT IN [money,ender,' Rule'])+;
         pattern celldescr := desc+;//descriptors+;
         //pattern cell := celldescr ' ' money;
-        pattern cell := celldescr wildcard money;
+        pattern topcell := wildcard celldescr wildcard*;
+        pattern nrmcell := celldescr wildcard money;
+        pattern cell := topcell | nrmcell;
+        //pattern cell := celldescr wildcard money | wildcard celldescr wildcard;
+        pattern tabrow := wildcard cell;
+        pattern tblstart := wildcard|ender;
+        pattern tabl := tblstart celldescr tabrow* wildcard;
         //pattern cell := celldescr OPT(PATTERN('[*]')) OPT(obelus) money;
         //pattern cell := celldescr obelus money;
         //pattern cell := celldescr '~' money;
@@ -329,6 +335,7 @@ EXPORT Text_Tools := MODULE
         rule moneytable := money;
         rule celltable := cell;
         rule daggtable := obelus;
+        rule infotbl := tabl;
 
         outrec_money := RECORD
             STRING money := MATCHTEXT(money);
@@ -336,9 +343,16 @@ EXPORT Text_Tools := MODULE
 
         outrec_cell := RECORD
             STRING descr := MATCHTEXT(cell/celldescr);
-            STRING money := MATCHTEXT(cell/money);
+            STRING money := IF(MATCHED(nrmcell),MATCHTEXT(cell/money),'');
             //STRING descr := MATCHUNICODE(cell/celldescr);
             //STRING money := MATCHUNICODE(cell/money);
+        END;
+        
+        outrec_tbl := RECORD
+            STRING tbl_title := MATCHTEXT(tabl/celldescr);
+            STRING descr := MATCHTEXT(tabl/tabrow/cell/celldescr);
+            STRING money := MATCHTEXT(tabl/tabrow/cell/money);
+            //STRING row := MATCHTEXT(tabl/tabrow);
         END;
 
         outrec_dagg := RECORD
@@ -353,12 +367,55 @@ EXPORT Text_Tools := MODULE
         //out := PARSE(T,content,moneytable,outrec_money,SCAN);
         out := PARSE(T,content,celltable,outrec_cell,SCAN);
         //out := PARSE(T,content,daggtable,outrec_dagg,SCAN);
-        //out := CASE(approach, 
-        //    'money' => PARSE(T,content,moneytable,outrec_money,SCAN),
-        //    'cell' => PARSE(T,content,celltable,outrec_cell,SCAN),
-        //    'dagg' => PARSE(T,content,daggtable,outrec_dagg,SCAN),
-        //    'ERROR: CHECK APPROACH');
+        //out := PARSE(T,content,infotbl,outrec_tbl,SCAN);
 
+        //RETURN out;
+        // descr_cond(STRING txt) := FUNCTION
+        //     splitup := STD.Str.SplitWords(txt,' ',FALSE);
+        //     lowers := ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
+        //     RETURN (NOT (COUNT(splitup)=1 AND ((txt[1] IN lowers) OR LENGTH(splitup[1])=1))) AND (txt != '');
+        // END;
+        //dcond1(STRING txt) := (txt[1] NOT IN ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',' ']) AND (txt[2] IN ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
+        //dcond1(STRING txt) := (LENGTH(txt) > 1) AND (txt[1] NOT IN lowers+uppers+ws) AND (txt[2] NOT IN lowers);
+        //dcond2(STRING txt) := ((' ' NOT IN STD.Str.SplitWords(txt,'',FALSE)) AND (LENGTH(txt) < 3)) AND (txt[1] IN ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']);
+        //dcond2(STRING txt) := LENGTH(txt) < 3 AND (txt[1] IN ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']);
+        //dcond(STRING txt) := dcond1(txt) and dcond2(txt);
+        //RETURN out(dcond2(descr));// OR money!='');
+        //firstishidden(STRING txt) := txt[1] NOT IN ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',' '];
+        
+        islower(STRING txt) := txt IN ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
+        isuselessupper(STRING txt) := FUNCTION
+        //(LENGTH(txt) < 3) AND CHOOSE(LENGTH(txt),(txt[1] IN ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']),(txt[1] IN ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']) AND (txt[2] IN ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']));
+            trimmed := TRIM(txt,LEFT,RIGHT);
+            RETURN (LENGTH(trimmed) < 3) AND (STD.Str.ToUpperCase(trimmed) = trimmed);
+        END;
+        //RETURN out((descr!='' OR money!='') AND (NOT firstishidden(descr)));
+        //RETURN out((descr!='' OR money!='') AND (NOT islower(TRIM(descr,LEFT,RIGHT)[1])));
         RETURN out;
+        // fix1 := out((descr!='' OR money!='') AND IF(money='',((NOT islower(TRIM(descr,LEFT,RIGHT)[1])) AND (NOT isuselessupper(descr))),TRUE));
+
+        // //RETURN fix1;
+        // isyear(STRING txt) := FUNCTION
+        //     trimmed := TRIM(txt,LEFT,RIGHT);
+        //     l4 := LENGTH(trimmed) = 4;
+        //     nums := ['0','1','2','3','4','5','6','7','8','9'];
+        //     isyr := (trimmed[1] in nums) AND (trimmed[2] in nums) AND (trimmed[3] in nums) AND (trimmed[4] in nums);
+        //     RETURN IF(l4,isyr,FALSE);
+        // END;
+
+        // // isuselessyear(STRING dtxt,STRING mtxt) := FUNCTION
+        // //     trimmed := TRIM(dtxt,LEFT,RIGHT);
+        // //     RETURN IF(isyear(trimmed),TRIM(mtxt,LEFT,RIGHT)!='',FALSE);
+        // // END;
+
+        // isemptymon(STRING txt) := FUNCTION
+        //     trimmed := TRIM(txt,LEFT,RIGHT);
+        //     RETURN trimmed = '';
+        // END;
+
+        // fix2 := fix1(NOT (isyear(descr) AND isemptymon(money)));
+        // //fix2 := fix1(NOT (isyear(descr)));// AND money=''));
+
+        // RETURN fix2;
     END;
 END;
