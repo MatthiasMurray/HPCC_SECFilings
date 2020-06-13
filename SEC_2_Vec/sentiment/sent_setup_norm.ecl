@@ -183,6 +183,7 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
       SELF.text := L.text;
       SELF.tfidf_score := L.tfidf_score;
       SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT))[1].w_Vector;
+      //SELF.w_vector := ITERATE(R.w_Vector,TRUE,addvecs(LEFT,RIGHT))
     END;
 
     out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));

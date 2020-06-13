@@ -272,73 +272,91 @@ EXPORT Text_Tools := MODULE
     END;
 
     //FIXME: We want money descriptions, not just money!
-    EXPORT MoneyTable(STRING text) := FUNCTION
     //EXPORT MoneyTable(UNICODE16 text) := FUNCTION
-
-        dagds := DATASET(WORKUNIT('W20200612-024132','Result 1'),{STRING dagger});
-        dagdag := dagds[1].dagger[1];
-
+    EXPORT MoneyTable(STRING text) := FUNCTION
 
         pattern num := PATTERN('[0-9]');
         pattern alpha := PATTERN('[a-zA-Z]');
+        pattern lowcs := PATTERN('[a-z]');
+        pattern upcs := PATTERN('[A-Z]');
+        pattern acron := upcs+;
+        pattern propwrd := upcs lowcs+;
+        pattern normwrd := lowcs+;
+        //pattern punct := ','|'('|')'|']'|'['|'-'|'\''|'"'|'/';
+        pattern punct := '('|')';
+        pattern ender := '.'|'!'|'?'|':';
+        pattern year := num*4;
+        pattern datepat := propwrd ' ' num* OPT(',') OPT(' ') year;
+        //pattern descriptors := propwrd|acron|punct|year|datepat|' ';
+        pattern descriptors := propwrd|acron|punct|year|' ';
+        notrule(STRING txt) := txt!='Rule';
+        pattern desc := VALIDATE(descriptors,notrule(MATCHTEXT));
+
         pattern fullplc := num*3;
         pattern moncomma := ','|' ';
         pattern dollartag := ' $'|' $ '|' ';
-        pattern ender := '.'|'!'|'?';
-        //pattern money := dollartag num OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) | '$' num num OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) | '$' num num num OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc) OPT(moncomma) OPT(fullplc);
         pattern hundreds := dollartag num OPT(num) OPT(num);
         pattern thousnds := hundreds moncomma fullplc;
         pattern millions := hundreds moncomma fullplc moncomma fullplc;
         pattern billions := hundreds moncomma fullplc moncomma fullplc moncomma fullplc;
-        pattern money := hundreds ' ' | thousnds ' ' | millions ' ' | billions ' ';
-        pattern obelus := u'\u2020'|'  ';
-        //pattern obelus := '†';
-        //pattern obelus := U'†'|U'&dagger;'|U'&#8224;'|U'&#134;'|U'&#x86;'|dagdag;//'';
-        pattern celldescr := (ANY NOT IN [obelus,money,ender])+;
-        pattern year := num*4;
-        //pattern celldescr := (ANY NOT IN ['$',num,','])+ | year;
-        //pattern cell := celldescr obelus money | celldescr money;
-        pattern cell := celldescr money;
-        //pattern tabrow := obelus celldescr obelus cell OPT(cell+) | obelus+ cell obelus+;
-        pattern cell2 := cell;
-        //pattern cells := OPT(cell2)+ cell OPT(cell2)+;
-        pattern cellZ := celldescr cell;
-        pattern infotbl := ender cellZ ' ';//celldescr cell ' ';
-        //pattern tblrow := celldescr obelus money;
-        //pattern tblrow := money obelus;
-        //pattern tblrow := obelus money;
-        //pattern tblrow := obelus alpha+ obelus;
-        
-        //rule moneytable := tblrow;
-        //rule moneytable := celldescr
-        //rule moneytable := obelus cell obelus;
-        //rule moneytable := tabrow;
-        //rule moneytable := money;
-        rule moneytable := cell;
-        //rule moneytable := ' ' money;
-        //rule moneytable := obelus;
-        //rule moneytable := infotbl;
+        isint(STRING txt) := txt IN ['0','1','2','3','4','5','6','7','8','9','$'];
+        notsingle(STRING txt) := NOT ((LENGTH(txt)=3) AND isint(TRIM(txt)[2]) AND NOT isint(txt[1]));
+        notdouble(STRING txt) := NOT ((LENGTH(txt)=4) AND isint(TRIM(txt)[2]) AND isint(TRIM(txt)[3]) AND NOT isint(txt[1]));
+        realmoney(STRING txt) := notsingle(txt) AND notdouble(txt);
+        pattern origmoney := hundreds ' ' | thousnds ' ' | millions ' ' | billions ' ';
+        pattern money := VALIDATE(origmoney,realmoney(MATCHTEXT));
 
-        outrec := RECORD
-            //STRING cell := MATCHTEXT(infotbl/cellZ);
-            //STRING cell := MATCHTEXT(infotbl/cells/cell);
-            //UNICODE16 cell := MATCHUNICODE(obelus);
-            //STRING cell := MATCHTEXT(obelus);
-            //STRING cell := MATCHTEXT(cell);
-            //STRING cell := MATCHTEXT(money);
-            //STRING cell := MATCHTEXT(tabrow/cell);
-            //STRING cell := MATCHTEXT(tblrow);
-            //UNICODE16 cell := MATCHUNICODE(tblrow);
-            //STRING cell := MATCHTEXT(tabrow);
-            STRING descr := MATCHTEXT(cell/celldescr);
-            STRING money := MATCHTEXT(cell/money);
+        //pattern wildcard := ANY NOT IN [ender,':',money,descriptors,alpha,num,punct,'$'];
+
+        //pattern obelus := wildcard;
+        pattern obelus := u'\u2020';//|'  ';
+        //pattern obelus := '~';
+        //pattern obelus := u'\u2020'|u'\uFFF9'|u'\uFFFA'|u'\uFFFB'|u'\uFFFC'|u'\uFFFD'|u'\uFFFE'|u'\uFFFF';
+        //pattern obelus := u'\uFFF9'|u'\uFFFB';
+        //pattern obelus := u'\uFFFD';
+        //pattern obelus := u'\ue280a0';
+
+        //pattern celldescr := (ANY NOT IN [money,ender,' Rule'])+;
+        pattern celldescr := desc+;//descriptors+;
+        //pattern cell := celldescr ' ' money;
+        pattern cell := celldescr money;
+        //pattern cell := celldescr OPT(PATTERN('[*]')) OPT(obelus) money;
+        //pattern cell := celldescr obelus money;
+        //pattern cell := celldescr '~' money;
+        //pattern cell := celldescr wildcard money;
+
+        rule moneytable := money;
+        rule celltable := cell;
+        rule daggtable := obelus;
+
+        outrec_money := RECORD
+            STRING money := MATCHTEXT(money);
         END;
 
-        rec1 := {STRING content};
+        outrec_cell := RECORD
+            STRING descr := MATCHTEXT(cell/celldescr);
+            STRING money := MATCHTEXT(cell/money);
+            //STRING descr := MATCHUNICODE(cell/celldescr);
+            //STRING money := MATCHUNICODE(cell/money);
+        END;
+
+        outrec_dagg := RECORD
+            STRING dagg := MATCHTEXT(obelus);
+            //UNICODE16 dagg := MATCHUNICODE(obelus);
+        END;
+
         //rec1 := {UNICODE16 content};
+        rec1 := {STRING content};
         T := DATASET([{text}],rec1);
 
-        out := PARSE(T,content,moneytable,outrec,SCAN);
+        out := PARSE(T,content,moneytable,outrec_money,SCAN);
+        //out := PARSE(T,content,celltable,outrec_cell,SCAN ALL);
+        //out := PARSE(T,content,daggtable,outrec_dagg,SCAN);
+        //out := CASE(approach, 
+        //    'money' => PARSE(T,content,moneytable,outrec_money,SCAN),
+        //    'cell' => PARSE(T,content,celltable,outrec_cell,SCAN),
+        //    'dagg' => PARSE(T,content,daggtable,outrec_dagg,SCAN),
+        //    'ERROR: CHECK APPROACH');
 
         RETURN out;
     END;
