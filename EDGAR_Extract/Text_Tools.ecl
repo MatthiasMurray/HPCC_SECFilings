@@ -307,6 +307,7 @@ EXPORT Text_Tools := MODULE
         pattern money := VALIDATE(origmoney,realmoney(MATCHTEXT));
 
         //pattern wildcard := ANY NOT IN [ender,':',money,descriptors,alpha,num,punct,'$'];
+        pattern wildcard := ANY NOT IN [num,alpha,ender,punct,'[',']','}','{',' '];
 
         //pattern obelus := wildcard;
         pattern obelus := u'\u2020';//|'  ';
@@ -319,7 +320,7 @@ EXPORT Text_Tools := MODULE
         //pattern celldescr := (ANY NOT IN [money,ender,' Rule'])+;
         pattern celldescr := desc+;//descriptors+;
         //pattern cell := celldescr ' ' money;
-        pattern cell := celldescr money;
+        pattern cell := celldescr wildcard money;
         //pattern cell := celldescr OPT(PATTERN('[*]')) OPT(obelus) money;
         //pattern cell := celldescr obelus money;
         //pattern cell := celldescr '~' money;
@@ -349,8 +350,8 @@ EXPORT Text_Tools := MODULE
         rec1 := {STRING content};
         T := DATASET([{text}],rec1);
 
-        out := PARSE(T,content,moneytable,outrec_money,SCAN);
-        //out := PARSE(T,content,celltable,outrec_cell,SCAN ALL);
+        //out := PARSE(T,content,moneytable,outrec_money,SCAN);
+        out := PARSE(T,content,celltable,outrec_cell,SCAN);
         //out := PARSE(T,content,daggtable,outrec_dagg,SCAN);
         //out := CASE(approach, 
         //    'money' => PARSE(T,content,moneytable,outrec_money,SCAN),
