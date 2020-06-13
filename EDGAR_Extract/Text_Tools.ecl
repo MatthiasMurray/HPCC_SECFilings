@@ -288,7 +288,7 @@ EXPORT Text_Tools := MODULE
         pattern year := num*4;
         pattern datepat := propwrd ' ' num* OPT(',') OPT(' ') year;
         //pattern descriptors := propwrd|acron|punct|year|datepat|' ';
-        pattern descriptors := propwrd|acron|punct|year|' ';
+        pattern descriptors := propwrd|'of'|acron|punct|year|' ';
         notrule(STRING txt) := txt!='Rule';
         pattern desc := VALIDATE(descriptors,notrule(MATCHTEXT));
 
