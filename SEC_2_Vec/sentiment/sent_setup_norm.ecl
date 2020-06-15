@@ -129,6 +129,7 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
     __result = (void *) wout;
     double *vv1 = (double *) v1;
     double *vv2 = (double *) v2;
+
     for (unsigned i = 0; i < N; i++)
     {
       wout[i] = vv1[i]+vv2[i];
@@ -218,60 +219,27 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
     svb_ordered := SORT(svb,svb.sentId);
     svb_grp := GROUP(svb_ordered,sentId);
 
-    // svb grpaddvecs(svb L,svb R) := TRANSFORM
-    //   SELF.word := L.word;
-    //   SELF.sentId := L.sentId;
-    //   SELF.text := L.text;
-    //   SELF.tfidf_score := L.tfidf_score;
-    //   SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-    // END;
-
     svbrec := RECORDOF(svb);
+
+    veconly := RECORD
+      t_Vector w_Vector;
+    END;
+
+    svb iter_vecs(svb l,svb r,INTEGER C) := TRANSFORM
+      SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
+      SELF := r;
+    END;
 
     svb grproll(svb L,DATASET(svbrec) R) := TRANSFORM
       SELF.word := L.word;
       SELF.sentId := L.sentId;
       SELF.text := L.text;
       SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := totalvec(R);
-      //SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT)).w_Vector;
+      SELF.w_Vector := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
     END;
 
     out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
 
     RETURN out;
-  END;
-  
-
-  //EXPERIMENT
-  //Trying to do the same as above but
-  //only rollup one sentence at a time
-  EXPORT sent_roll(UNSIGNED8 sid) := FUNCTION
-    svb := sent_vecs_byword_norm;
-    svb_N := svb(sentId = sid);
-    svb roll_sents(svb_N L,svb_N R) := TRANSFORM
-      SELF.word := L.word;
-      SELF.sentId := L.sentId;
-      SELF.text := L.text;
-      SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-    END;
-    
-    out := ROLLUP(svb_N,TRUE,roll_sents(LEFT,RIGHT));
-    
-    //PRIORITY 2: FIXME: Wondering if we want to try the above with a counter? Haven't run yet.
-    //
-    //svb roll_sents_cntr(svb_N L,svb_N R,INTEGER C) := TRANSFORM
-    //  SELF.word := L.word;
-    //  SELF.sentId := L.sentId;
-    //  SELF.text := L.text;
-    //  SELF.tfidf_score := L.tfidf_score;
-    //  SELF.w_Vector := addvecs(L.w_Vector,R[C].w_Vector);
-    //END;
-    //
-    //out := ROLLUP(svb_N,TRUE,roll_sents(LEFT,svb_N,COUNTER));
-
-    RETURN out;
-    
   END;
 END;
