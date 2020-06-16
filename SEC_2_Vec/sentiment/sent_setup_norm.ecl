@@ -136,62 +136,6 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
     }
   ENDC++;
 
-  EXPORT sent_embed := FUNCTION
-    svb := sent_vecs_byword_norm;
-
-    svb roll_sents(svb L,svb R) := TRANSFORM
-      SELF.word := L.word;
-      SELF.sentId := L.sentId;
-      SELF.text := L.text;
-      SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-    END;
-    svb_sort := SORT(svb,svb.sentId);
-    svb_grouped := GROUP(svb_sort,sentId);
-    //out := ROLLUP(svb,LEFT.sentId=RIGHT.sentId,roll_sents(LEFT,RIGHT));
-    out := ROLLUP(svb_grouped,GROUP,roll_sents(LEFT,RIGHT));
-    RETURN out;
-    //RETURN svb_grouped;
-  END;
-
-
-  //PRIORITY: FIXME: NEW AS OF 6/3 -- experiment with
-  //When cluster back up
-  EXPORT sembed_grp := FUNCTION
-    svb := sent_vecs_byword_norm;
-
-    //svb_ordered := SORT(svb,svb.sentId);
-    //svb_grp := GROUP(svb_ordered,sentId);
-    svb_sent1 := svb(sentId=1);
-    svb1 := GROUP(svb_sent1,sentId);
-    svb_sent2 := svb(sentId=2);
-    svb2 := GROUP(svb_sent2,sentId);
-    svb_grp := REGROUP(svb1,svb2);
-
-    svb grpaddvecs(svb L,svb R) := TRANSFORM
-      SELF.word := L.word;
-      SELF.sentId := L.sentId;
-      SELF.text := L.text;
-      SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-    END;
-
-    svbrec := RECORDOF(svb);
-
-    svb grproll(svb L,DATASET(svbrec) R) := TRANSFORM
-      SELF.word := L.word;
-      SELF.sentId := L.sentId;
-      SELF.text := L.text;
-      SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := ROLLUP(R,TRUE,grpaddvecs(LEFT,RIGHT))[1].w_Vector;
-      //SELF.w_vector := ITERATE(R.w_Vector,TRUE,addvecs(LEFT,RIGHT))
-    END;
-
-    out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
-
-    RETURN out;
-  END;
-
   EXPORT wrec := RECORD
     STRING word;
     UNSIGNED8 sentId;
@@ -200,22 +144,11 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
     t_Vector w_Vector;
   END;
 
-  EXPORT totalvec(DATASET(wrec) sgrp) := FUNCTION
-    wrec grpaddvecsT(wrec L,wrec R) := TRANSFORM
-      SELF.word := L.word;
-      SELF.sentId := L.sentId;
-      SELF.text := L.text;
-      SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := addvecs(L.w_Vector,R.w_Vector);
-    END;
-
-    out := ROLLUP(sgrp,TRUE,grpaddvecsT(LEFT,RIGHT))[1].w_Vector;
-    RETURN out;
-  END;
-
   EXPORT sembed_grp_experimental := FUNCTION
-    svb := sent_vecs_byword_norm;
-
+    svb_cpy := sent_vecs_byword_norm;
+    
+    svb_no0 := svb_cpy(tfidf_score>0);
+    
     svb_ordered := SORT(svb,svb.sentId);
     svb_grp := GROUP(svb_ordered,sentId);
 
