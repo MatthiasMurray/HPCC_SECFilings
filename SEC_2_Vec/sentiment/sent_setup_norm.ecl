@@ -22,9 +22,12 @@ t_Vector := Types.t_Vector;
 // wrec (used to extend tfrec to contain w_Vector for calculating weighted vectors)
 // tfidfrec (similar to step1rec, but docs field is DATASET(tfrec) rather than DATASET(docus))
 // svecrec (contains a word and its vectorized embedding)
+
 EXPORT sent_setup_norm(STRING docPath) := MODULE
+//EXPORT sent_setup_norm(STRING docPath,Types.TextMod mod) := MODULE
+//EXPORT sent_setup_norm(TextVectors.Types.Sentence tsentences) := MODULE
   
-  
+  //EXPORT tmod := DATASET(mod,DATASET(Types.TextMod));
 
   EXPORT sp     := sent_prep(docPath);
   EXPORT lex    := sp.dLexicon;
@@ -149,21 +152,21 @@ EXPORT sent_setup_norm(STRING docPath) := MODULE
     
     svb_no0 := svb_cpy(tfidf_score>0);
     
-    svb_ordered := SORT(svb,svb.sentId);
+    svb_ordered := SORT(svb_no0,svb_no0.sentId);
     svb_grp := GROUP(svb_ordered,sentId);
 
-    svbrec := RECORDOF(svb);
+    svbrec := RECORDOF(svb_no0);
 
     veconly := RECORD
       t_Vector w_Vector;
     END;
 
-    svb iter_vecs(svb l,svb r,INTEGER C) := TRANSFORM
+    svb_no0 iter_vecs(svb_no0 l,svb_no0 r,INTEGER C) := TRANSFORM
       SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
       SELF := r;
     END;
 
-    svb grproll(svb L,DATASET(svbrec) R) := TRANSFORM
+    svb_no0 grproll(svb_no0 L,DATASET(svbrec) R) := TRANSFORM
       SELF.word := L.word;
       SELF.sentId := L.sentId;
       SELF.text := L.text;

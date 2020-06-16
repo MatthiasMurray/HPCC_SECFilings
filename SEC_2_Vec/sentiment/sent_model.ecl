@@ -21,14 +21,15 @@ EXPORT sent_model := MODULE
         STRING label;
     END;
 
-    EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE) := FUNCTION
+    EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING approach='vanilla') := FUNCTION
         rawsents := secvec_input_lbl(path,labelnames);
         rawrec := RECORD
             UNSIGNED8 sentId := rawsents.sentId;
             STRING text := rawsents.text;
         END;
         outlblrec := RECORD
-            UNSIGNED8 sentId := rawsents.sentId;
+            //UNSIGNED8 sentId := rawsents.sentId;
+            STRING text := rawsents.text;
             STRING label := rawsents.label;
         END;
         jrec := RECORD(TextMod)
@@ -40,13 +41,34 @@ EXPORT sent_model := MODULE
 
         sv := tv.SentenceVectors();
         model := sv.GetModel(trainSentences);
-        sentmod := model(typ=2);
+        ssn := sent_setup_norm(path);
+        vanstart := model(typ=2);
+        vanrec := RECORD
+            UNSIGNED8 sentId := vanstart.id;
+            STRING text := vanstart.text;
+            tv.Types.t_Vector vec := vanstart.vec;
+        END;
+        vands := TABLE(vanstart,vanrec);
+        tfidfstart := ssn.sembed_grp_experimental;
+        tfhelprec := RECORD
+            UNSIGNED8 sentId := tfidfstart.sentId;
+            STRING text := tfidfstart.text;
+            tv.Types.t_Vector vec := tfidfstart.w_Vector;
+        END;
+        tfds := TABLE(tfidfstart,tfhelprec);
+        sentmod := IF(approach='vanilla',vands,tfds);
 
-        trainrec lrT(TextMod s,DATASET(outlblrec) r) := TRANSFORM
-            SELF.id := s.id;
+        smodrec := RECORD
+            UNSIGNED8 sentId;
+            STRING text;
+            tv.Types.t_Vector vec;
+        END;
+
+        trainrec lrT(smodrec s,DATASET(outlblrec) r) := TRANSFORM
+            SELF.id := s.sentId;
             SELF.text := s.text;
             SELF.vec := s.vec;
-            SELF.label := r(sentId = s.id)[1].label;
+            SELF.label := r(text = s.text)[1].label;
         END;
 
         out := PROJECT(sentmod,lrT(LEFT,labelSentences));
