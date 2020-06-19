@@ -214,6 +214,33 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     RETURN SET(mult_ds,mult_ds.val);
   END;
 
+  EXPORT rescaleplain(t_Vector invec) := FUNCTION
+    inds := DATASET(invec,{REAL8 val});
+    inrec := RECORD
+        REAL8 val;
+    END;
+    inrec abs_T(inrec v) := TRANSFORM
+        SELF.val := ABS(v.val);
+    END;
+    absds := PROJECT(inds,abs_T(LEFT));
+    maxab := 1/MAX(absds,absds.val);
+    RETURN vecmult(invec,maxab);
+  END;
+
+  EXPORT rescale(t_Vector invec) := FUNCTION
+    inds := DATASET(invec,{REAL8 val});
+    inrec := RECORD
+        REAL8 val;
+    END;
+    inrec abs_T(inrec v) := TRANSFORM
+        SELF.val := ABS(v.val);
+    END;
+    absds := PROJECT(inds,abs_T(LEFT));
+    maxab := 1/MAX(absds,absds.val);
+    minab := 1/MIN(absds,absds.val);
+    RETURN IF(maxab<1,vecmult(invec,maxab),rescaleplain(vecmult(invec,minab)));
+  END;
+
   EXPORT sembed_grp_experimental := FUNCTION
     svb_cpy := sent_vecs_byword_norm;
     
@@ -230,13 +257,10 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
 
     svb_no0 iter_vecs(svb_no0 l,svb_no0 r,INTEGER C) := TRANSFORM
       //abmm_r := absmaxmin(r.w_Vector);
-      smallr := vecmult(r.W_vector,.0001)
-      //SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
-      SELF.w_Vector := IF(C=1,smallr,addvecs(l.w_Vector,smallr));
-      //SELF.w_Vector := IF(C=1,vecmult(r.W_Vector,.0001),addvecs(l.w_Vector,vecmult(r.w_Vector,.0001)));
+      //smallr := vecmult(r.W_vector,.0001);
+      SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
+      //SELF.w_Vector := IF(C=1,smallr,addvecs(l.w_Vector,smallr));
       SELF := r;
-      //SELF := r;
-      //SELF := smallr;
     END;
 
     svb_no0 grproll(svb_no0 L,DATASET(svbrec) R) := TRANSFORM
@@ -253,16 +277,16 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
       // bigvec := vecmult(totvec,scaleby);
       // SELF.w_Vector := tv.internal.svUtils.normalizeVector(bigvec);
       //
-      totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      abmm := absmaxmin(totvec);
-      absmax := abmm[1];
+      //totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
+      //abmm := absmaxmin(totvec);
+      //absmax := abmm[1];
       // absmin := abmm[2];
-      scaleby := IF(absmax<1,1,1/absmax);
+      //scaleby := IF(absmax<1,1,1/absmax);
       // //bigvec := IF(scaleby>1,vecmult(totvec,100),vecmult(totvec,scaleby));
-      bigvec := vecmult(totvec,scaleby);
+      //bigvec := vecmult(totvec,scaleby);
       // SELF.w_Vector := tv.internal.svUtils.normalizeVector(bigvec);
       //
-      SELF.w_Vector := normalvec(bigvec);
+      //SELF.w_Vector := normalvec(bigvec);
       //
       //Pure normalize, which seems to be getting all 0s
       //
@@ -277,6 +301,10 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
       //totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
       //lnscale := lnvec(totvec);
       //SELF.w_Vector := normalvec(lnscale);
+      //
+      //USING NEW RESCALE FUNCTIONS
+      totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
+      SELF.w_Vector := normalvec(rescale(totvec));
     END;
 
     out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
