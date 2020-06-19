@@ -1,0 +1,6 @@
+<Cache hash="2917899651794336233">
+<Attr module="SEC_2_Vec.sentiment" name="model_test">
+ <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
+ <Depend module="TextVectors" name="types"/>
+</Attr>
+</Cache>

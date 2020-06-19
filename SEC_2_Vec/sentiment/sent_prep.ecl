@@ -4,8 +4,8 @@ IMPORT * FROM TextVectors;
 IMPORT * FROM SEC_2_Vec;
 TextMod := Types.TextMod;
 
-EXPORT sent_prep(STRING docPath) := MODULE
-  
+//EXPORT sent_prep(STRING docPath) := MODULE
+EXPORT sent_prep(DATASET(Types.Sentence) tsents) := MODULE
 //   EXPORT sentences := secvec_input(docPath);
 
 //   EXPORT sents := TABLE(sentences,{STRING text := sentences.text});
@@ -46,8 +46,8 @@ EXPORT sent_prep(STRING docPath) := MODULE
 // END;
 //EXPORT sent_prep(TextVectors.Types.Sentence sentences) := MODULE
   
-  EXPORT sentences := secvec_input(docPath);
-  //EXPORT sentences := sentences;
+  //EXPORT sentences := secvec_input(docPath);
+  EXPORT sentences := tsents;
 
   EXPORT sents := TABLE(sentences,{STRING text := sentences.text});
 

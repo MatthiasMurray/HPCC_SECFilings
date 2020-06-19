@@ -3,6 +3,5 @@
  <Depend module="TextVectors" name="types"/>
  <Depend module="SEC_2_Vec.sentiment" name="sent_prep"/>
  <Depend module="std" name="str"/>
- <Depend module="TextVectors" name="sentencevectors"/>
 </Attr>
 </Cache>

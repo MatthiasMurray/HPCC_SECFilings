@@ -1,0 +1,5 @@
+<Cache hash="2917899651794336233">
+<Attr module="SEC_2_Vec.sentiment" name="back2vec_test">
+ <Depend module="TextVectors.Internal" name="svutils"/>
+</Attr>
+</Cache>

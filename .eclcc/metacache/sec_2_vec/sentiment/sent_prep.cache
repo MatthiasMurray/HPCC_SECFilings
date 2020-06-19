@@ -1,7 +1,6 @@
 <Cache hash="2917899651794336233">
 <Attr module="SEC_2_Vec.sentiment" name="sent_prep">
  <Depend module="TextVectors" name="types"/>
- <Depend module="SEC_2_Vec" name="secvec_input"/>
  <Depend module="ML.Docs" name="tokenize"/>
  <Depend module="std" name="str"/>
 </Attr>
