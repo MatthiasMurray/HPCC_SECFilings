@@ -1,5 +1,6 @@
 <Cache hash="2917899651794336233">
 <Attr name="cleanvecnorm">
  <Depend module="TextVectors.Internal" name="svutils"/>
+ <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
 </Attr>
 </Cache>

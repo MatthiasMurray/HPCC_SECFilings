@@ -2,5 +2,7 @@
 <Attr module="SEC_2_Vec.sentiment" name="model_test">
  <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
  <Depend module="TextVectors" name="types"/>
+ <Depend module="LogisticRegression" name="binomiallogisticregression"/>
+ <Depend module="LogisticRegression" name="confusion"/>
 </Attr>
 </Cache>

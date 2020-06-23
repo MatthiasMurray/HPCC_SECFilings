@@ -141,6 +141,61 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     }
   ENDC++;
 
+  EXPORT t_Vector abslist(t_Vector v1) := BEGINC++
+    #body
+    size32_t N = lenV1;
+    __lenResult = (size32_t) (N*sizeof(double));
+    double *wout = (double *) rtlMalloc(__lenResult);
+    __isAllResult = false;
+    __result = (void *) wout;
+    double *vv1 = (double *) v1;
+
+    for (unsigned i=0;i<N;i++)
+    {
+      wout[i]=fabs(vv1[i]);
+    }
+  ENDC++;
+
+  EXPORT REAL8 maxfloat(t_Vector v1) := BEGINC++
+    //__lenResult = (double) sizeof(double);
+    //double *m = (double) rtlMalloc(__lenResult);
+    double *vv1 = (double *) v1;
+    double m = 0.0;
+    m = vv1[0];
+    for (unsigned i=1;1<=799;i++)
+    {
+      if (m<vv1[i])
+      {
+        m=vv1[i];
+      }
+    }
+    return m;
+  ENDC++;
+
+  EXPORT t_Vector scalevec(t_Vector v1,REAL8 mab) := BEGINC++
+    #body
+    size32_t N = lenV1;
+    __lenResult = (size32_t) (N*sizeof(double));
+    double *wout = (double *) rtlMalloc(__lenResult);
+    __isAllResult = false;
+    __result = (void *) wout;
+    double *vv1 = (double *) v1;
+
+    double maxab = (double) mab;
+
+    for (unsigned i=0;i<N;i++)
+    {
+      if (maxab>0)
+      {
+        wout[i]=vv1[i]/maxab;
+      }
+      else
+      {
+        wout[i]=vv1[i];
+      }
+    }
+  ENDC++;
+
   EXPORT wrec := RECORD
     STRING word;
     UNSIGNED8 sentId;
@@ -161,20 +216,20 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     RETURN [MAX(absds,absds.val),MIN(absds,absds.val)];
   END;
 
-  EXPORT lnvec(t_Vector v) := FUNCTION
-    vecasds := DATASET(v,{REAL8 val});
-    vdsrec := RECORD
-      REAL8 val;
-    END;
-    vdsrec lnT(vdsrec vds) := TRANSFORM
-      abscell := ABS(vds.val);
-      sign := IF(abscell=0,1,vds.val/abscell);
-      absnu := IF(abscell<=1,1.1,abscell);
-      SELF.val := sign*LN(absnu);
-    END;
-    outds := PROJECT(vecasds,lnT(LEFT));
-    RETURN SET(outds,outds.val);
-  END;
+  // EXPORT lnvec(t_Vector v) := FUNCTION
+  //   vecasds := DATASET(v,{REAL8 val});
+  //   vdsrec := RECORD
+  //     REAL8 val;
+  //   END;
+  //   vdsrec lnT(vdsrec vds) := TRANSFORM
+  //     abscell := ABS(vds.val);
+  //     sign := IF(abscell=0,1,vds.val/abscell);
+  //     absnu := IF(abscell<=1,1.1,abscell);
+  //     SELF.val := sign*LN(absnu);
+  //   END;
+  //   outds := PROJECT(vecasds,lnT(LEFT));
+  //   RETURN SET(outds,outds.val);
+  // END;
 
   EXPORT normalvec(t_Vector v) := FUNCTION
     vecasds := DATASET(v,{REAL8 val});
@@ -185,34 +240,34 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
       SELF.val := vds.val * vds.val;
     END;
     allsq := PROJECT(vecasds,squareT(LEFT));
-    norm := 1/SQRT(SUM(allsq,allsq.val));
-    RETURN vecmult(v,norm);
+    norm := SQRT(SUM(allsq,allsq.val));
+    RETURN IF(norm>0.0,vecmult(v,1.0/norm),v);
   END;
 
-  EXPORT addvecs_ecl(t_Vector v1,t_Vector v2) := FUNCTION
-    ds1 := DATASET(v1,{REAL8 val});
-    ds2 := DATASET(v2,{REAL8 val});
-    vdsrec := RECORD
-      REAL8 val;
-    END;
-    vdsrec addT(vdsrec vds,INTEGER C) := TRANSFORM
-      SELF.val := vds.val + ds2[C].val;
-    END;
-    add_ds := PROJECT(ds1,addT(LEFT,COUNTER));
-    RETURN SET(add_ds,add_ds.val);
-  END;
+  // EXPORT addvecs_ecl(t_Vector v1,t_Vector v2) := FUNCTION
+  //   ds1 := DATASET(v1,{REAL8 val});
+  //   ds2 := DATASET(v2,{REAL8 val});
+  //   vdsrec := RECORD
+  //     REAL8 val;
+  //   END;
+  //   vdsrec addT(vdsrec vds,INTEGER C) := TRANSFORM
+  //     SELF.val := vds.val + ds2[C].val;
+  //   END;
+  //   add_ds := PROJECT(ds1,addT(LEFT,COUNTER));
+  //   RETURN SET(add_ds,add_ds.val);
+  // END;
 
-  EXPORT multvec_ecl(t_Vector v1,REAL8 x) := FUNCTION
-    ds1 := DATASET(v1,{REAL8 val});
-    vdsrec := RECORD
-      REAL8 val;
-    END;
-    vdsrec multT(vdsrec vds) := TRANSFORM
-      SELF.val := vds.val * x;
-    END;
-    mult_ds := PROJECT(ds1,multT(LEFT));
-    RETURN SET(mult_ds,mult_ds.val);
-  END;
+  // EXPORT multvec_ecl(t_Vector v1,REAL8 x) := FUNCTION
+  //   ds1 := DATASET(v1,{REAL8 val});
+  //   vdsrec := RECORD
+  //     REAL8 val;
+  //   END;
+  //   vdsrec multT(vdsrec vds) := TRANSFORM
+  //     SELF.val := vds.val * x;
+  //   END;
+  //   mult_ds := PROJECT(ds1,multT(LEFT));
+  //   RETURN SET(mult_ds,mult_ds.val);
+  // END;
 
   EXPORT rescaleplain(t_Vector invec) := FUNCTION
     inds := DATASET(invec,{REAL8 val});
@@ -223,22 +278,8 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
         SELF.val := ABS(v.val);
     END;
     absds := PROJECT(inds,abs_T(LEFT));
-    maxab := 1/MAX(absds,absds.val);
-    RETURN vecmult(invec,maxab);
-  END;
-
-  EXPORT rescale(t_Vector invec) := FUNCTION
-    inds := DATASET(invec,{REAL8 val});
-    inrec := RECORD
-        REAL8 val;
-    END;
-    inrec abs_T(inrec v) := TRANSFORM
-        SELF.val := ABS(v.val);
-    END;
-    absds := PROJECT(inds,abs_T(LEFT));
-    maxab := 1/MAX(absds,absds.val);
-    minab := 1/MIN(absds,absds.val);
-    RETURN IF(maxab<1,vecmult(invec,maxab),rescaleplain(vecmult(invec,minab)));
+    maxab := MAX(absds,absds.val);
+    RETURN IF(maxab=0.0,invec,vecmult(invec,1.0/maxab));
   END;
 
   EXPORT sembed_grp_experimental := FUNCTION
@@ -256,11 +297,19 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     END;
 
     svb_no0 iter_vecs(svb_no0 l,svb_no0 r,INTEGER C) := TRANSFORM
-      //abmm_r := absmaxmin(r.w_Vector);
-      //smallr := vecmult(r.W_vector,.0001);
       SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
-      //SELF.w_Vector := IF(C=1,smallr,addvecs(l.w_Vector,smallr));
       SELF := r;
+    END;
+
+    t_Vector get_fixed_vec(DATASET(RECORDOF(svb_no0)) r) := FUNCTION
+      totvec := ITERATE(r,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
+      //RETURN rescaleplain(totvec);
+      RETURN totvec;
+      //RETURN normalvec(rescaleplain(totvec));
+      //mab := maxfloat(abslist(totvec));
+      //RETURN tv.internal.svutils.normalizeVector(scalevec(totvec,mab));
+      //RETURN tv.internal.svUtils.normalizeVector(totvec);
+      //RETURN normalvec(totvec);
     END;
 
     svb_no0 grproll(svb_no0 L,DATASET(svbrec) R) := TRANSFORM
@@ -268,43 +317,7 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
       SELF.sentId := L.sentId;
       SELF.text := L.text;
       SELF.tfidf_score := L.tfidf_score;
-      //
-      //My alternate approach to normalizing the vector directly
-      //
-      // totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      // absmax := MAX(ABS(MIN(totvec)),ABS(MAX(totvec)));
-      // scaleby:= 1000/absmax;
-      // bigvec := vecmult(totvec,scaleby);
-      // SELF.w_Vector := tv.internal.svUtils.normalizeVector(bigvec);
-      //
-      //totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      //abmm := absmaxmin(totvec);
-      //absmax := abmm[1];
-      // absmin := abmm[2];
-      //scaleby := IF(absmax<1,1,1/absmax);
-      // //bigvec := IF(scaleby>1,vecmult(totvec,100),vecmult(totvec,scaleby));
-      //bigvec := vecmult(totvec,scaleby);
-      // SELF.w_Vector := tv.internal.svUtils.normalizeVector(bigvec);
-      //
-      //SELF.w_Vector := normalvec(bigvec);
-      //
-      //Pure normalize, which seems to be getting all 0s
-      //
-      //SELF.w_Vector := tv.internal.svUtils.normalizeVector(ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector);
-      //
-      //The totaled vector without re-scaling
-      //SELF.w_Vector := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      //totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      //SELF.w_Vector := normalvec(totvec);
-      //
-      //
-      //totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      //lnscale := lnvec(totvec);
-      //SELF.w_Vector := normalvec(lnscale);
-      //
-      //USING NEW RESCALE FUNCTIONS
-      totvec := ITERATE(R,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      SELF.w_Vector := normalvec(rescale(totvec));
+      SELF.w_Vector := get_fixed_vec(R);
     END;
 
     out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
