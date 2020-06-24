@@ -30,11 +30,17 @@ dat_tf := dat_tf_all;
 // hout_tf_1 := tf_1[11..20];
 
 //X_vn_all := sent_model.getNumericField(dat_vn_all);
-X_vn := sent_model.getNumericField(dat_vn);
-X_tf := sent_model.getNumericField(dat_tf);
+//X_vn := sent_model.getNumericField(dat_vn);
+ff_vn := sent_model.getFields(dat_vn);
+X_vn := ff_vn.NUMF;
+ff_tf := sent_model.getFields(dat_tf);
+X_tf := ff_tf.NUMF;
+//X_tf := sent_model.getNumericField(dat_tf);
 //Y_vn_all := sent_model.getDiscreteField(dat_vn_all);
-Y_vn := sent_model.getDiscreteField(dat_vn);
-Y_tf := sent_model.getDiscreteField(dat_tf);
+//Y_vn := sent_model.getDiscreteField(dat_vn);
+//Y_tf := sent_model.getDiscreteField(dat_tf);
+Y_vn := ff_vn.DSCF;
+Y_tf := ff_tf.DSCF;
 
 // X_vn_hout_0 := sent_model.getNumericField(hout_van_0);
 // X_vn_hout_1 := sent_model.getNumericField(hout_van_1);
@@ -91,4 +97,5 @@ OUTPUT(blr_mod_vn,ALL,NAMED('sandp_vn'));
 // OUTPUT(vn_1_conf,NAMED('sandp_vanilla_1_holdout_confusion'));
 // OUTPUT(mod1con,NAMED('sandp_Model_1_Confusion'));
 // OUTPUT(mod2con,NAMED('sandp_Model_2_confusion'));
-OUTPUT(allconfu,NAMED('allconfusion_sp_labels'))
+OUTPUT(allconfu,NAMED('allconfusion_sp_labels'));
+OUTPUT(plainblr.Report(blr_mod_vn,X_vn,Y_vn));
