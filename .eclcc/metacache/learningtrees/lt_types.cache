@@ -1,5 +1,5 @@
 <Cache hash="-2010522870310160901">
-<Attr name="types">
+<Attr module="LearningTrees" name="lt_types">
  <Depend module="ML_Core" name="types"/>
 </Attr>
 </Cache>

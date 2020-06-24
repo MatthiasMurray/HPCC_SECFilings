@@ -1,10 +1,34 @@
 IMPORT STD;
 IMPORT * FROM EDGAR_Extract;
 IMPORT * FROM EDGAR_Extract.Text_Tools;
+mainrec := EDGAR_Extract.Extract_Layout_modified.Main;
 
 
-EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE) := FUNCTION
-    plain := XBRL_HTML_File(inpath);
+EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto='plain') := FUNCTION
+    start := XBRL_HTML_File(inpath);
+    
+    compjoin(DATASET(RECORDOF(start)) st) := FUNCTION
+      path := '~ncf::edgarfilings::supp::labelguide_sp_medium::labelguide.csv';
+      csvrec := RECORD
+        STRING plainname;
+        STRING spname;
+      END;
+      draw := DATASET(path,csvrec,CSV(HEADING(1)));
+      // RECORDOF(start) j_T(RECORDOF(start) st,RECORDOF(ds) d) := TRANSFORM
+      //   SELF.filename := d.spname;
+      //   SELF.accessionNumber := st.accessionNumber;
+      //   SELF.filingDate := st.filingDate;
+      //   SELF.pubfloat := st.pubfloat;
+      //   SELF.wellknown := st.wellknown;
+      //   SELF.volfilers := st.volfilers;
+      //   SELF.values := st.values;
+      // END;
+      cj := JOIN(st,draw,LEFT.filename = RIGHT.plainname,TRANSFORM(RECORDOF(st),SELF.filename:=RIGHT.spname,SELF:=LEFT));
+      RETURN cj;
+    END;
+    
+    plain := IF(comparedto='plain',start,compjoin(start));
+
     STRING addfakelabels(STRING inName,STRING strlbl) := FUNCTION
         splitname := STD.Str.SplitWords(inName, '_', FALSE);
         ftwx_fakelabel := '10q_'+strlbl+'.xml';

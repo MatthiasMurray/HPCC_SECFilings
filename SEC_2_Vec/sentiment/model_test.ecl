@@ -89,7 +89,9 @@ first_con_last := LR.Confusion(Y_lhalf,first_pred_last);
 last_con_first := LR.Confusion(Y_fhalf,last_pred_first);
 last_con_last := LR.Confusion(Y_lhalf,last_pred_last);
 
-big_rprt := plainblr.Report(big_mod,X,Y);
+big_pred_all := plainblr.Classify(big_mod,X);
+big_con_all := LR.Confusion(Y,big_pred_all);
+//big_rprt := plainblr.Report(big_mod,X,Y);
 
 one_pred_first := plainblr.Classify(sent_mod1,X_fhalf);
 two_pred_first := plainblr.Classify(sent_mod2,X_fhalf);
@@ -123,7 +125,10 @@ OUTPUT(first_con_last,NAMED('first_con_last'));
 OUTPUT(last_con_first,NAMED('last_con_first'));
 OUTPUT(last_con_last,NAMED('last_con_last'));
 
-OUTPUT(big_rprt,NAMED('big_model_report'));
+//OUTPUT(big_rprt,NAMED('big_model_report'));
+OUTPUT(big_con_all,NAMED('big_model_performance'));
+OUTPUT(COUNT(van0s),NAMED('number_0_labels'));
+OUTPUT(COUNT(van1s),NAMED('number_1_labels'));
 
 OUTPUT(one_con_first,NAMED('one_con_first'));
 OUTPUT(two_con_first,NAMED('two_con_first'));

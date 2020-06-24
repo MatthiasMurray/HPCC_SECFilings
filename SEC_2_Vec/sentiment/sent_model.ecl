@@ -21,10 +21,10 @@ EXPORT sent_model := MODULE
         STRING label;
     END;
 
-    EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE) := FUNCTION
+    EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING comparedto='plain') := FUNCTION
     //EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING approach='vanilla') := FUNCTION
 
-        rawsents := secvec_input_lbl(path,labelnames);
+        rawsents := secvec_input_lbl(path,labelnames,comparedto);
         
         rawrec := RECORD
             UNSIGNED8 sentId := rawsents.sentId;
