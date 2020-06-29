@@ -1,7 +1,8 @@
-<Cache hash="-2010522870310160901">
+<Cache hash="-4307230042106480957">
 <Attr module="SEC_2_Vec.sentiment" name="sent_setup_norm">
  <Depend module="TextVectors" name="types"/>
  <Depend module="SEC_2_Vec.sentiment" name="sent_prep"/>
  <Depend module="std" name="str"/>
+ <Depend module="TextVectors.Internal" name="svutils"/>
 </Attr>
 </Cache>

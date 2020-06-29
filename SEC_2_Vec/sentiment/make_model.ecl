@@ -4,7 +4,6 @@ IMPORT TextVectors as tv;
 IMPORT LogisticRegression AS LR;
 trainrec := sent_model.trainrec;
 
-
 #OPTION('outputLimit',500);
 //path := '~ncf::edgarfilings::raw::tech10qs_medium';
 //path_w_labels := '~ncf::edgarfilings::raw::tech_10qs_medium_withlabels';
@@ -13,89 +12,66 @@ trainrec := sent_model.trainrec;
 path := '~ncf::edgarfilings::raw::fixedlabels_allsecs_big';
 
 dat := sent_model.trndata_wlbl(path,TRUE,'s&p');
+
 dat_vn_all := dat[1];
-dat_vn := dat_vn_all;
-// van_0 := dat_vn_all(label='0');
-// van_1 := dat_vn_all(label='1');
-//dat_vn := van_0[1..10]+van_1[1..10];
+van_0 := dat_vn_all(label='0');
+van_1 := dat_vn_all(label='1');
+dat_vn := van_0[1..100]+van_1[1..600];
+holdout_vn := van_0[101..]+van_1[601..800];
+
 dat_tf_all := dat[2];
-// tf_0 := dat_tf_all(label='0');
-// tf_1 := dat_tf_all(label='1');
-// dat_tf := tf_0[1..10]+tf_1[1..10];
-dat_tf := dat_tf_all;
+tf_0 := dat_tf_all(label='0');
+tf_1 := dat_tf_all(label='1');
+dat_tf := tf_0[1..100]+tf_1[1..600];
+holdout_tf := tf_0[101..]+tf_1[601..800];
 
-// hout_van_0 := van_0[11..20];
-// hout_van_1 := van_1[11..20];
-// hout_tf_0 := tf_0[11..20];
-// hout_tf_1 := tf_1[11..20];
-
-//X_vn_all := sent_model.getNumericField(dat_vn_all);
-//X_vn := sent_model.getNumericField(dat_vn);
 ff_vn := sent_model.getFields(dat_vn);
-X_vn := ff_vn.NUMF;
+ff_vnhold := sent_model.getFields(holdout_vn);
 ff_tf := sent_model.getFields(dat_tf);
+ff_tfhold := sent_model.getFields(holdout_tf);
+
+X_vn_ho := ff_vnhold.NUMF;
+X_vn := ff_vn.NUMF;
+X_tf_ho := ff_tfhold.NUMF;
 X_tf := ff_tf.NUMF;
-//X_tf := sent_model.getNumericField(dat_tf);
-//Y_vn_all := sent_model.getDiscreteField(dat_vn_all);
-//Y_vn := sent_model.getDiscreteField(dat_vn);
-//Y_tf := sent_model.getDiscreteField(dat_tf);
-Y_vn := ff_vn.DSCF;
+
+Y_vn_ho := ff_vnhold.DSCF;
+Y_tf_ho := ff_tfhold.DSCF;
 Y_tf := ff_tf.DSCF;
+Y_vn := ff_vn.DSCF;
 
-// X_vn_hout_0 := sent_model.getNumericField(hout_van_0);
-// X_vn_hout_1 := sent_model.getNumericField(hout_van_1);
-// X_tf_hout_0 := sent_model.getNumericField(hout_tf_0);
-// X_tf_hout_1 := sent_model.getNumericField(hout_tf_1);
-
-// Y_vn_hout_0 := sent_model.getDiscreteField(hout_van_0);
-// Y_vn_hout_1 := sent_model.getDiscreteField(hout_van_1);
-// Y_tf_hout_0 := sent_model.getDiscreteField(hout_tf_0);
-// Y_tf_hout_1 := sent_model.getDiscreteField(hout_tf_1);
-
-//blr_mod := sent_model.train_binlogreg(dat,200);
 blr_mod_tf := sent_model.train_binlogreg(dat_tf,100);
 blr_mod_vn := sent_model.train_binlogreg(dat_vn,100);
+
 plainblr := LR.BinomialLogisticRegression();
+
 //blr_rprt_vn := plainblr.Report(blr_mod_vn,X_vn,Y_vn);
-//blr_rprt_tf := plainblr.Report(blr_mod_tf,X_tf,Y_tf);
+//blr_rprt_tf := plainblr.Report(blr_mod_tf,X_tf,Y_tf)
 
-// vn_pred_0 := plainblr.Classify(blr_mod_vn,X_vn_hout_0);
-// vn_0_conf := LR.Confusion(Y_vn_hout_0,vn_pred_0);
-// vn_pred_1 := plainblr.Classify(blr_mod_vn,X_vn_hout_1);
-// vn_1_conf := LR.Confusion(Y_vn_hout_1,vn_pred_1);
+allpreds_tf := plainblr.Classify(blr_mod_tf,X_tf);
+allpreds_vn := plainblr.Classify(blr_mod_vn,X_vn);
+allconfu_vn := LR.Confusion(Y_vn,allpreds_vn);
+allconfu_tf := LR.Confusion(Y_tf,allpreds_tf);
 
-// mod2dat_vn := hout_van_0 + hout_van_1;
-// blr_mod_vn2:= sent_model.train_binlogreg(mod2dat_vn,100);
+holdpreds_vn := plainblr.Classify(blr_mod_vn,X_vn_ho);
+holdpreds_tf := plainblr.Classify(blr_mod_tf,X_tf_ho);
+holdconfu_vn := LR.Confusion(Y_vn_ho,holdpreds_vn);
+holdconfu_tf := LR.Confusion(Y_tf_ho,holdpreds_tf);
 
-allpreds := plainblr.Classify(blr_mod_vn,X_vn);
-allconfu := LR.Confusion(Y_vn,allpreds);
-// mod1allpreds := plainblr.Classify(blr_mod_vn,X_vn_all);
-// mod1con := LR.Confusion(Y_vn_all,mod1allpreds);
-// mod2allpreds := plainblr.Classify(blr_mod_vn2,X_vn_all);
-// mod2con := LR.Confusion(Y_vn_all,mod2allpreds);
+hldvnconfu := LR.BinomialConfusion(holdconfu_vn);
+blrvnconfu := LR.BinomialConfusion(allconfu_vn);
+hldtfconfu := LR.BinomialConfusion(holdconfu_tf);
+blrtfconfu := LR.BinomialConfusion(allconfu_tf);
 
-//X := sent_model.getNumericField(dat);
-//Y := sent_model.getDiscreteField(dat);
-//blr_mod := sent_model.train_binlogreg(dat,200);
-//plainblr := LR.BinomialLogisticRegression();
-//blr_rprt := plainblr.Report(blr_mod,X,Y);
-
-//OUTPUT(X,ALL,NAMED('allNumeric_smallset32_balanced'));
-//OUTPUT(Y,ALL,NAMED('allDiscrete_smallset32_balanced'));
-//OUTPUT(blr_mod,ALL,NAMED('blrmod_32'));
-//OUTPUT(blr_rprt,ALL,NAMED('blr_rprt_32'));
-//OUTPUT(blr_rprt,NAMED('vanilla_report'));
-//OUTPUT(blr_rprt_tf,NAMED('tfidf_report'));
-
-OUTPUT(dat_tf,ALL,NAMED('sandp_tf_vecs'));
 OUTPUT(dat_vn,ALL,NAMED('sandp_vn_vecs'));
-OUTPUT(blr_mod_tf,ALL,NAMED('sandp_tf'));
-OUTPUT(blr_mod_vn,ALL,NAMED('sandp_vn'));
-// OUTPUT(blr_rprt_vn,NAMED('vanilla_report'));
-// OUTPUT(blr_rprt_tf,NAMED('tfidf_report'));
-// OUTPUT(vn_0_conf,NAMED('sandp_vanilla_0_holdout_confusion'));
-// OUTPUT(vn_1_conf,NAMED('sandp_vanilla_1_holdout_confusion'));
-// OUTPUT(mod1con,NAMED('sandp_Model_1_Confusion'));
-// OUTPUT(mod2con,NAMED('sandp_Model_2_confusion'));
-OUTPUT(allconfu,NAMED('allconfusion_sp_labels'));
-OUTPUT(plainblr.Report(blr_mod_vn,X_vn,Y_vn));
+OUTPUT(dat_tf,ALL,NAMED('sandp_tf_vecs'));
+OUTPUT(X_vn[..200],NAMED('sandp_vn_numeric'));
+OUTPUT(X_tf[..200],NAMED('sandp_tf_numeric'));
+OUTPUT(Y_vn,ALL,NAMED('sandp_vn_labels'));
+OUTPUT(Y_tf,ALL,NAMED('sandp_tf_labels'));
+OUTPUT(allpreds_vn,ALL,NAMED('sandp_vn_preds'));
+OUTPUT(allpreds_tf,ALL,NAMED('sandp_tf_preds'));
+OUTPUT(blrvnconfu,ALL,NAMED('blr_vn_confu'));
+OUTPUT(blrtfconfu,ALL,NAMED('blr_tf_confu'));
+OUTPUT(hldvnconfu,ALL,NAMED('holdout_vanilla_confusion'));
+OUTPUT(hldtfconfu,ALL,NAMED('holdout_tfidf_confusion'));

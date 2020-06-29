@@ -92,7 +92,8 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
   //Multiplying vectors by a real number
   EXPORT t_Vector vecmult(t_Vector v,REAL8 x) := BEGINC++
     #body
-    size32_t N = lenV;
+    //size32_t N = lenV;
+    size32_t N = lenV/sizeof(double);
     __lenResult = (size32_t) (N * sizeof(double));
     double *wout = (double*) rtlMalloc(__lenResult);
     __isAllResult = false;
@@ -127,7 +128,8 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
   //C++ function for adding t_Vector sets element-wise
   EXPORT t_Vector addvecs(t_Vector v1,t_Vector v2) := BEGINC++
     #body
-    size32_t N = lenV1;
+    //size32_t N = lenV1;
+    size32_t N = lenV1/sizeof(double);
     __lenResult = (size32_t) (N*sizeof(double));
     double *wout = (double *) rtlMalloc(__lenResult);
     __isAllResult = false;
@@ -138,61 +140,6 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     for (unsigned i = 0; i < N; i++)
     {
       wout[i] = vv1[i]+vv2[i];
-    }
-  ENDC++;
-
-  EXPORT t_Vector abslist(t_Vector v1) := BEGINC++
-    #body
-    size32_t N = lenV1;
-    __lenResult = (size32_t) (N*sizeof(double));
-    double *wout = (double *) rtlMalloc(__lenResult);
-    __isAllResult = false;
-    __result = (void *) wout;
-    double *vv1 = (double *) v1;
-
-    for (unsigned i=0;i<N;i++)
-    {
-      wout[i]=fabs(vv1[i]);
-    }
-  ENDC++;
-
-  EXPORT REAL8 maxfloat(t_Vector v1) := BEGINC++
-    //__lenResult = (double) sizeof(double);
-    //double *m = (double) rtlMalloc(__lenResult);
-    double *vv1 = (double *) v1;
-    double m = 0.0;
-    m = vv1[0];
-    for (unsigned i=1;1<=799;i++)
-    {
-      if (m<vv1[i])
-      {
-        m=vv1[i];
-      }
-    }
-    return m;
-  ENDC++;
-
-  EXPORT t_Vector scalevec(t_Vector v1,REAL8 mab) := BEGINC++
-    #body
-    size32_t N = lenV1;
-    __lenResult = (size32_t) (N*sizeof(double));
-    double *wout = (double *) rtlMalloc(__lenResult);
-    __isAllResult = false;
-    __result = (void *) wout;
-    double *vv1 = (double *) v1;
-
-    double maxab = (double) mab;
-
-    for (unsigned i=0;i<N;i++)
-    {
-      if (maxab>0)
-      {
-        wout[i]=vv1[i]/maxab;
-      }
-      else
-      {
-        wout[i]=vv1[i];
-      }
     }
   ENDC++;
 
@@ -216,21 +163,6 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     RETURN [MAX(absds,absds.val),MIN(absds,absds.val)];
   END;
 
-  // EXPORT lnvec(t_Vector v) := FUNCTION
-  //   vecasds := DATASET(v,{REAL8 val});
-  //   vdsrec := RECORD
-  //     REAL8 val;
-  //   END;
-  //   vdsrec lnT(vdsrec vds) := TRANSFORM
-  //     abscell := ABS(vds.val);
-  //     sign := IF(abscell=0,1,vds.val/abscell);
-  //     absnu := IF(abscell<=1,1.1,abscell);
-  //     SELF.val := sign*LN(absnu);
-  //   END;
-  //   outds := PROJECT(vecasds,lnT(LEFT));
-  //   RETURN SET(outds,outds.val);
-  // END;
-
   EXPORT normalvec(t_Vector v) := FUNCTION
     vecasds := DATASET(v,{REAL8 val});
     vdsrec := RECORD
@@ -243,31 +175,6 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     norm := SQRT(SUM(allsq,allsq.val));
     RETURN IF(norm>0.0,vecmult(v,1.0/norm),v);
   END;
-
-  // EXPORT addvecs_ecl(t_Vector v1,t_Vector v2) := FUNCTION
-  //   ds1 := DATASET(v1,{REAL8 val});
-  //   ds2 := DATASET(v2,{REAL8 val});
-  //   vdsrec := RECORD
-  //     REAL8 val;
-  //   END;
-  //   vdsrec addT(vdsrec vds,INTEGER C) := TRANSFORM
-  //     SELF.val := vds.val + ds2[C].val;
-  //   END;
-  //   add_ds := PROJECT(ds1,addT(LEFT,COUNTER));
-  //   RETURN SET(add_ds,add_ds.val);
-  // END;
-
-  // EXPORT multvec_ecl(t_Vector v1,REAL8 x) := FUNCTION
-  //   ds1 := DATASET(v1,{REAL8 val});
-  //   vdsrec := RECORD
-  //     REAL8 val;
-  //   END;
-  //   vdsrec multT(vdsrec vds) := TRANSFORM
-  //     SELF.val := vds.val * x;
-  //   END;
-  //   mult_ds := PROJECT(ds1,multT(LEFT));
-  //   RETURN SET(mult_ds,mult_ds.val);
-  // END;
 
   EXPORT rescaleplain(t_Vector invec) := FUNCTION
     inds := DATASET(invec,{REAL8 val});
@@ -292,35 +199,39 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
 
     svbrec := RECORDOF(svb_no0);
 
-    veconly := RECORD
-      t_Vector w_Vector;
-    END;
-
-    svb_no0 iter_vecs(svb_no0 l,svb_no0 r,INTEGER C) := TRANSFORM
+    svbrec iter_vecs(svbrec l,svbrec r,INTEGER C) := TRANSFORM
       SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
       SELF := r;
     END;
 
-    t_Vector get_fixed_vec(DATASET(RECORDOF(svb_no0)) r) := FUNCTION
-      totvec := ITERATE(r,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL)[1].w_Vector;
-      //RETURN rescaleplain(totvec);
+    t_Vector get_tot_vec(DATASET(svbrec) r) := FUNCTION
+      itvecs := ITERATE(r,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL);
+      L_iter := COUNT(itvecs);
+      totvec := itvecs[L_iter].w_Vector;
       RETURN totvec;
-      //RETURN normalvec(rescaleplain(totvec));
-      //mab := maxfloat(abslist(totvec));
-      //RETURN tv.internal.svutils.normalizeVector(scalevec(totvec,mab));
-      //RETURN tv.internal.svUtils.normalizeVector(totvec);
-      //RETURN normalvec(totvec);
     END;
 
-    svb_no0 grproll(svb_no0 L,DATASET(svbrec) R) := TRANSFORM
+    svbrec grproll(svbrec L,DATASET(svbrec) R) := TRANSFORM
       SELF.word := L.word;
       SELF.sentId := L.sentId;
       SELF.text := L.text;
       SELF.tfidf_score := L.tfidf_score;
-      SELF.w_Vector := get_fixed_vec(R);
+      SELF.w_Vector := get_tot_vec(R);
     END;
 
-    out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
+    out_tot := UNGROUP(ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT))));
+
+    outrec := RECORDOF(out_tot);
+
+    outrec norm_T(outrec d) := TRANSFORM
+      SELF.word := d.word;
+      SELF.sentId := d.sentId;
+      SELF.text := d.text;
+      SELF.tfidf_score := d.tfidf_score;
+      SELF.w_Vector := tv.Internal.svUtils.normalizeVector(d.w_Vector);
+    END;
+
+    out := PROJECT(out_tot,norm_T(LEFT));
 
     RETURN out;
   END;

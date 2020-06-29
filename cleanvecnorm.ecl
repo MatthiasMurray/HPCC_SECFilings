@@ -51,6 +51,23 @@ rescale(vrec invec) := FUNCTION
     RETURN IF(maxab>0.0,multvec(invec,1.0/maxab),invec);
 END;
 
+testrescale(vrec invec) := FUNCTION
+    inds := DATASET(invec,{REAL8 val});
+    inrec := RECORD
+        REAL8 val;
+    END;
+    inrec abs_T(inrec v) := TRANSFORM
+        SELF.val := ABS(v.val);
+    END;
+    absds := PROJECT(inds,abs_T(LEFT));
+    maxab := MAX(absds,absds.val);
+    result := MODULE
+        m := maxab;
+        d := 1/maxab;
+    END;
+    RETURN result;
+END;
+
 normalvec(vrec invec) := FUNCTION
     inds := DATASET(invec,{REAL8 val});
     inrec := RECORD
@@ -127,3 +144,4 @@ OUTPUT(normalvec(vec6),NAMED('directnormal_realvec6'));
 OUTPUT(rescale(vec6),NAMED('rescale_realvec6'));
 OUTPUT(normalvec(rescale(vec6)),NAMED('normal_rescale_realvec6'));
 //
+OUTPUT(COUNT(realtfds[1].vec));

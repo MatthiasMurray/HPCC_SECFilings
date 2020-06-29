@@ -1,5 +1,5 @@
 IMPORT STD;
-IMPORT ML;
+IMPORT tokenutils as tu;
 IMPORT * FROM TextVectors;
 IMPORT * FROM SEC_2_Vec;
 TextMod := Types.TextMod;
@@ -53,13 +53,13 @@ EXPORT sent_prep(DATASET(Types.Sentence) tsents) := MODULE
 
   EXPORT dSentences := TABLE(sentences,{UNSIGNED id := sentences.sentId,STRING txt := sentences.text});
   
-  EXPORT dSequenced := ML.Docs.Tokenize.Enumerate(dSentences);
+  EXPORT dSequenced := tu.Tokenize.Enumerate(dSentences);
 
-  EXPORT dCleaned := ML.Docs.Tokenize.Clean(dSentences);
+  EXPORT dCleaned := tu.Tokenize.Clean(dSentences);
 
-  EXPORT dSplit := ML.Docs.Tokenize.Split(dCleaned);
+  EXPORT dSplit := tu.Tokenize.Split(dCleaned);
 
-  EXPORT dLexicon := ML.Docs.Tokenize.Lexicon(dSplit);
+  EXPORT dLexicon := tu.Tokenize.Lexicon(dSplit);
 
   EXPORT n := COUNT(dSentences);
 

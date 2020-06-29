@@ -1,0 +1,7 @@
+<Cache hash="-7614897545528844846">
+<Attr module="MLbeta.Docs" name="tokenize">
+ <Depend module="MLbeta.Docs" name="types"/>
+ <Depend module="std" name="str"/>
+ <Depend module="MLbeta" name="config"/>
+</Attr>
+</Cache>

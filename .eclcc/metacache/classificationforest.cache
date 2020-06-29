@@ -1,0 +1,9 @@
+<Cache hash="-7729830583698309503">
+<Attr name="classificationforest">
+ <Depend module="" name="lt_types"/>
+ <Depend module="ML_Core" name="types"/>
+ <Depend module="ML_Core.Interfaces" name="iclassify2"/>
+ <Depend module="" name="learningforest"/>
+ <Depend module="internal" name="rf_classification"/>
+</Attr>
+</Cache>

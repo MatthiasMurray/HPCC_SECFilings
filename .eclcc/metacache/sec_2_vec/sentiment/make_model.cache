@@ -1,7 +1,8 @@
-<Cache hash="-2010522870310160901">
+<Cache hash="-4307230042106480957">
 <Attr module="SEC_2_Vec.sentiment" name="make_model">
  <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
  <Depend module="LogisticRegression" name="binomiallogisticregression"/>
  <Depend module="LogisticRegression" name="confusion"/>
+ <Depend module="LogisticRegression" name="binomialconfusion"/>
 </Attr>
 </Cache>

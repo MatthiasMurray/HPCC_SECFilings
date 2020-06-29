@@ -1,12 +1,14 @@
 IMPORT LearningTrees as LT;
-IMPORT LT.ClassificationForest as CF;
+IMPORT * FROM LT;
 IMPORT SEC_2_Vec;
 IMPORT SEC_2_Vec.sentiment.sent_model as sm;
 
 vansents := DATASET(WORKUNIT('W20200623-012104','Result 2'),sm.trainrec);
-X := sm.getNumericField(vansents);
-Y := sm.getDiscreteField(vansents);
-
+ff := sm.getFields(vansents);
+//X := sm.getNumericField(vansents);
+X := ff.NUMF;
+//Y := sm.getDiscreteField(vansents);
+Y := ff.DSCF;
 //vs := COUNT(vansents);
 //dscan := DBSCAN(eps=0.01);
 //clust := dscan.fit(X);
@@ -15,10 +17,10 @@ Y := sm.getDiscreteField(vansents);
 // Y_fhalf := IF(vs%2=0,sm.getDiscreteField(vansents[1..vs/2]),sm.getDiscreteField(vansents[1..(vs-1)/2]));
 // Y_lhalf := IF(vs%2=0,sm.getDiscreteField(vansents[(vs/2)+1..]),sm.getDiscreteField(vansents[(vs+1)/2..]));
 
-mod := CF.GetModel(X,Y);
+mod := ClassificationForest.GetModel(X,Y);
 // modfh := CF.GetModel(X_fhalf,Y_fhalf);
 // modlh := CF.GetModel(X_lhalf,Y_lhalf);
-//preds := CF.Classify(mod,X);
+preds := ClassificationForest.Classify(mod,X);
 // preds_f_f := CF.Classify(modfh,X_fhalf);
 // preds_f_l := CF.Classify(modfh,X_lhalf);
 // preds_l_f := CF.Classify(modlh,X_fhalf);
@@ -40,4 +42,7 @@ mod := CF.GetModel(X,Y);
 //mod := SVM.SVC.GetModel(X,Y);
 
 //OUTPUT(SVM.SVC.Report(mod,X,Y),NAMED('SVC_Report_All'));
-OUTPUT(mod);
+OUTPUT(vansents,ALL);
+OUTPUT(mod,ALL);
+OUTPUT(preds,ALL);
+//OUTPUT(treecon);
