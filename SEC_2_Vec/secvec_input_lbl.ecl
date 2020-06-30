@@ -65,6 +65,15 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
     
     ds := IF(prelabeled,label_filings(plain),label_filings(PROJECT(plain,lblT(LEFT,COUNTER))));
 
+    // Entry_wlabel := RECORD
+    //   UNICODE element;
+    //   UNICODE contextRef;
+    //   UNICODE unitRef;
+    //   UNICODE decimals;
+    //   STRING content;
+    //   STRING label;
+    // END;
+
     Entry_wlabel := RECORD
       UNICODE element;
       UNICODE contextRef;
@@ -72,7 +81,18 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       UNICODE decimals;
       STRING content;
       STRING label;
+      STRING fname;
     END;
+
+    //Currently experimenting with filename inclusion in each row
+    // Entry_wlabel augment_entry(label_rec bigrow,Extract_Layout_modified.Entry_clean r) := TRANSFORM
+    //   SELF.element := r.element;
+    //   SELF.contextRef := r.contextRef;
+    //   SELF.unitRef := r.unitRef;
+    //   SELF.decimals := r.decimals;
+    //   SELF.content := r.content;
+    //   SELF.label := bigrow.label;
+    // END;
 
     Entry_wlabel augment_entry(label_rec bigrow,Extract_Layout_modified.Entry_clean r) := TRANSFORM
       SELF.element := r.element;
@@ -81,6 +101,7 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       SELF.decimals := r.decimals;
       SELF.content := r.content;
       SELF.label := bigrow.label;
+      SELF.fname := bigrow.fileName;
     END;
 
     final_label_rec := RECORD
