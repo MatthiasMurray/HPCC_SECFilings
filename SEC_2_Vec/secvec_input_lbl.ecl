@@ -8,7 +8,9 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
     start := XBRL_HTML_File(inpath);
     
     compjoin(DATASET(RECORDOF(start)) st) := FUNCTION
-      path := '~ncf::edgarfilings::supp::labelguide_sp_medium::labelguide.csv';
+      //path := '~ncf::edgarfilings::supp::labelguide_sp_medium::labelguide.csv';
+      //path := '~ncf::edgarfilings::raw::labels_allsecs_all';
+      path := '~ncf::edgarfilings::supp::labelguide_full';
       csvrec := RECORD
         STRING plainname;
         STRING spname;

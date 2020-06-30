@@ -78,8 +78,13 @@ EXPORT Text_Tools := MODULE
 
     EXPORT XBRL_HTML_File(STRING fileName) := FUNCTION
         File := XBRL_Extract_modified.File(fileName);
+
+        tnamerec := RECORD
+            STRING tagname;
+        END;
         
         Extract_Layout_modified.Entry_clean fixHTML(Extract_Layout_modified.Entry_clean lr) := TRANSFORM
+        //Extract_Layout_modified.Entry_clean fixHTML(Extract_Layout_modified.Entry_clean lr,tnamerec tnames) := TRANSFORM
             SELF.element    := lr.element;
             SELF.contextRef := lr.contextRef;
             SELF.unitRef    := lr.unitRef;
@@ -91,6 +96,7 @@ EXPORT Text_Tools := MODULE
                                                 'us-gaap:QuarterlyFinancialInformationTextBlock'],
                                     '[OPN]'+Concat(CashParse(lr.content))+'[CLS]',
                                     lr.content);
+            //SELF.content := IF(lr.element IN tnames,'[OPN]'+Concat(CashParse(lr.content))+'[CLS]',lr.content);
         END;
 
         RECORDOF(File) cvthtml(RECORDOF(File) lr) := TRANSFORM
@@ -115,6 +121,8 @@ EXPORT Text_Tools := MODULE
             //SELF.fyend            := lr.fyend;
             SELF.filingDate       := 'N/A';    // only classic EDGAR
             SELF.accessionNumber  := 'N/A';    // only classic EDGAR
+            //elset := DATASET(SET(lr.values,lr.values.element));
+            //SELF.values           := PROJECT(lr.values,fixHTML(LEFT,elset));
             SELF.values           := PROJECT(lr.values,fixHTML(LEFT));
         END;
         
