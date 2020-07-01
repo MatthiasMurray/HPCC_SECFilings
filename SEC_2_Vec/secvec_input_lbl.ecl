@@ -167,6 +167,7 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
     outrec := RECORD
       STRING text := tb.content;
       STRING label := tb.label;
+      STRING fname := tb.fname;
     END;
 
     testtextvec_input_lbl := sep_sents_lbl(lblConcat(TABLE(tb,outrec)));

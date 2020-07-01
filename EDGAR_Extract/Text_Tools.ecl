@@ -46,15 +46,19 @@ EXPORT Text_Tools := MODULE
     EXPORT concatlblrec := RECORD
         STRING text;
         STRING label;
+        STRING fname;
     END;
     
     EXPORT concatlblrec lblConcat(DATASET(concatlblrec) File,STRING kDelimiter = ' ') := FUNCTION
-        sortFile := SORT(File,File.label);
-        grplbl   := GROUP(sortFile,label);
+        // sortFile := SORT(File,File.label);
+        // grplbl   := GROUP(sortFile,label);
+        sortFile := SORT(File,File.fname);
+        grplbl := GROUP(sortFile,fname);
 
         concatlblrec lblconcat_grp(concatlblrec l,DATASET(concatlblrec) allRows) := TRANSFORM
             SELF.text := Concat(TABLE(allRows,{STRING text := allRows.text}),kDelimiter);
             SELF.label:= l.label;
+            SELF.fname := l.fname;
         END;
 
         grplbltxtconcat := ROLLUP(grplbl,GROUP,lblconcat_grp(LEFT,ROWS(LEFT)));
@@ -252,6 +256,7 @@ EXPORT Text_Tools := MODULE
           UNSIGNED8 sentId;
           STRING sentence;
           STRING label;
+          STRING fname;
         END;
 
         lblOutrec lblParseT(RECORDOF(cr) f) := TRANSFORM
@@ -259,6 +264,7 @@ EXPORT Text_Tools := MODULE
             SELF.sentId:= 0;
             SELF.sentence:= MATCHTEXT(nicesent/sentence);
             SELF.label := f.label;
+            SELF.fname := f.fname;
         END;
 
         lblSentparse := PARSE(cr,text,nicesent,lblParseT(LEFT),SCAN);
@@ -274,6 +280,7 @@ EXPORT Text_Tools := MODULE
           UNSIGNED8 sentId := lblSentlist.sentId;
           STRING text := lblSentlist.sentence;
           STRING label := lblSentlist.label;
+          STRING fname := lblSentlist.fname;
         END;
 
         RETURN TABLE(lblSentlist,lblFinalrec);

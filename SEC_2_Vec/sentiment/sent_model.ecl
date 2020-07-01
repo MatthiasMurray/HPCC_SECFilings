@@ -19,6 +19,7 @@ EXPORT sent_model := MODULE
         tv.Types.t_Sentence text;
         tv.Types.t_Vector vec;
         STRING label;
+        STRING fname;
     END;
 
     EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING comparedto='plain') := FUNCTION
@@ -34,9 +35,7 @@ EXPORT sent_model := MODULE
             UNSIGNED8 sentId := rawsents.sentId;
             //STRING text := rawsents.text;
             STRING label := rawsents.label;
-        END;
-        jrec := RECORD(TextMod)
-            STRING label;
+            STRING fname := rawsents.fname;
         END;
 
         trainSentences := TABLE(rawsents,rawrec);
@@ -73,6 +72,7 @@ EXPORT sent_model := MODULE
             SELF.text := s.text;
             SELF.vec := s.vec;
             SELF.label := r(sentId = s.sentId)[1].label;
+            SELF.fname := r(sentId = s.sentId)[1].fname;
         END;
 
         //out := PROJECT(sentmod,lrT(LEFT,labelSentences));
