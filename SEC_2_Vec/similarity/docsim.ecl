@@ -18,7 +18,7 @@ EXPORT REAL8 docsim(DATASET(trainrec) doca,DATASET(trainrec) docb) := FUNCTION
     END;
 
     midrec finish_sim_T(trainrec a,t_Vector vecb) := TRANSFORM
-        SELF.simval := cosineSim(a.vec,vecb,100);
+        SELF.simval := POWER(cosineSim(a.vec,vecb,100),3.0);
     END;
 
     outrec start_sim_T(trainrec b,DATASET(trainrec) a) := TRANSFORM

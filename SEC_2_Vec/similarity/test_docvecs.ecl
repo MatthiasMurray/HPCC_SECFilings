@@ -1,6 +1,8 @@
 IMPORT STD;
 IMPORT SEC_2_Vec;
 IMPORT * FROM SEC_2_Vec;
+IMPORT LogisticRegression as LR;
+IMPORT ML_Core;
 
 trainrec := sentiment.sent_model.trainrec;
 
@@ -38,6 +40,29 @@ doc_10_2 := tick10ds(fname=namesin10[2]);
 
 sl := similarity.simlabs(fnamevecs_tf);
 
+sal := sl.sim_and_labels;
+
+ML_Core.ToField(sal,X,sid,'similarity');
+
+lblintrec := RECORD
+    UNSIGNED rowid;
+    INTEGER4 label;
+END;
+
+lblintrec lblintT(RECORDOF(sal) s) := TRANSFORM
+    SELF.rowid := s.sid;
+    SELF.label := (INTEGER4)s.label;
+END;
+
+output_tofield := PROJECT(sal,lblintT(LEFT));
+
+Y := PROJECT(output_tofield,TRANSFORM(ML_Core.Types.DiscreteField,SELF.wi := 1,SELF.value := LEFT.label,SELF.id := LEFT.rowid,SELF.number := 1));
+
+blr := LR.BinomialLogisticRegression();
+mod := blr.getModel(X,Y);
+
+con := LR.BinomialConfusion(blr.Report(mod,X,Y));
+
 OUTPUT(fnames);
 OUTPUT(tick1ds);
 OUTPUT(tick5ds);
@@ -48,4 +73,7 @@ OUTPUT(similarity.docsim(doc_5_1,doc_10_1));
 OUTPUT(similarity.docsim(doc_5_2,doc_10_2));
 OUTPUT(similarity.docsim(tick1ds,doc_5_1));
 OUTPUT(similarity.docsim(tick1ds,doc_10_1));
+OUTPUT(sl.fname_bytick);
 OUTPUT(sl.simsentcomp);
+OUTPUT(mod);
+OUTPUT(con);
