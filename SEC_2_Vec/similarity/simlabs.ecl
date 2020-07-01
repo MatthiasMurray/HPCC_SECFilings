@@ -5,20 +5,26 @@ IMPORT * FROM SEC_2_Vec;
 trainrec := sentiment.sent_model.trainrec;
 
 EXPORT simlabs(DATASET(trainrec) traindat) := MODULE
-    get_ticker(STRING f) := FUNCTION
+    EXPORT get_ticker(STRING f) := FUNCTION
         parts := STD.Str.SplitWords(f,'_',FALSE);
         tick := parts[1];
         RETURN tick;
     END;
 
-    tickrec := RECORD
-        STRING ticker := get_ticker(fnamevecs_tf.fname);
+    EXPORT simsentcomp := FUNCTION
+        tickrec := RECORD
+            STRING fname  := traindat.fname;
+            STRING ticker := get_ticker(traindat.fname);
+        END;
+
+        tickds := TABLE(traindat,tickrec);
+
+        ticksdedup := DEDUP(SORT(tickds,tickds.ticker),tickds.ticker);
+        fnames := DEDUP(SORT(tickds,tickds.fname),tickds.fname);
+        ticks := SET(ticksdedup,ticksdedup.ticker);
+        RETURN fnames;
     END;
 
-    tickds := TABLE(fnamevecs_tf,tickrec);
-
-    ticksdedup := DEDUP(tickds,tickds.ticker);
-    ticks := SET(ticksdedup,ticksdedup.ticker);
 
     //for each tick, act on records
     //get similarity scores for consecutive filings

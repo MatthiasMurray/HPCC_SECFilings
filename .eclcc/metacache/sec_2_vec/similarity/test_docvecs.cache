@@ -2,6 +2,7 @@
 <Attr module="SEC_2_Vec.similarity" name="test_docvecs">
  <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
  <Depend module="std" name="str"/>
+ <Depend module="SEC_2_Vec.similarity" name="simlabs"/>
  <Depend module="SEC_2_Vec.similarity" name="docsim"/>
 </Attr>
 </Cache>

@@ -36,6 +36,8 @@ doc_5_2 := tick5ds(fname=namesin5[2]);
 doc_10_1 := tick10ds(fname=namesin10[1]);
 doc_10_2 := tick10ds(fname=namesin10[2]);
 
+sl := similarity.simlabs(fnamevecs_tf);
+
 OUTPUT(fnames);
 OUTPUT(tick1ds);
 OUTPUT(tick5ds);
@@ -46,3 +48,4 @@ OUTPUT(similarity.docsim(doc_5_1,doc_10_1));
 OUTPUT(similarity.docsim(doc_5_2,doc_10_2));
 OUTPUT(similarity.docsim(tick1ds,doc_5_1));
 OUTPUT(similarity.docsim(tick1ds,doc_10_1));
+OUTPUT(sl.simsentcomp);
