@@ -10,7 +10,8 @@ trainrec := sent_model.trainrec;
 //path := '~ncf::edgarfilings::raw::labels_allsecs_medium';
 //path := '~ncf::edgarfilings::raw::fixedlabels_allsecs_medium';
 //path := '~ncf::edgarfilings::raw::fixedlabels_allsecs_big';
-path := '~ncf::edgarfilings::raw::labels_allsecs_all';
+//path := '~ncf::edgarfilings::raw::labels_allsecs_all';
+path := '~ncf::edgarfilings::raw::plainlabel_allsecs_all';
 
 dat := sent_model.trndata_wlbl(path,TRUE,'s&p');
 
