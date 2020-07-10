@@ -28,9 +28,9 @@ preds := CF.Classify(mod,X);
 
 svc := SVM.SVC();
 
-svm_mod := svc.GetModel(X,Y);
-svm_preds := svc.Classify(svm_mod,X);
-svm_con := SVM.Confusion(Y,svm_preds);
+//svm_mod := svc.GetModel(X,Y);
+//svm_preds := svc.Classify(svm_mod,X);
+//svm_con := SVM.Confusion(Y,svm_preds);
 
 IMPORT LogisticRegression as LR;
 
@@ -42,4 +42,4 @@ OUTPUT(mod,ALL);
 OUTPUT(preds,ALL);
 OUTPUT(con,NAMED('tree_model_confusion'));
 //OUTPUT(svc.Report(svm_mod,X,Y),NAMED('SVC_Report_All'));
-OUTPUT(svm_con,NAMED('svm_model_confusion'));
+//OUTPUT(svm_con,NAMED('svm_model_confusion'));

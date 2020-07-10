@@ -22,10 +22,18 @@ EXPORT sent_model := MODULE
         STRING fname;
     END;
 
-    EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING comparedto='plain') := FUNCTION
-    //EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING approach='vanilla') := FUNCTION
+    EXPORT sveclblrec := RECORD
+        UNSIGNED8 sentId;
+        STRING text;
+        STRING label;
+        STRING fname;
+    END;
 
-        rawsents := secvec_input_lbl(path,labelnames,comparedto);
+    //EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING comparedto='plain') := FUNCTION
+    //EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING approach='vanilla') := FUNCTION
+    EXPORT trndata_wlbl(DATASET(sveclblrec) rawsents) := FUNCTION
+
+        //rawsents := secvec_input_lbl(path,labelnames,comparedto);
         
         rawrec := RECORD
             UNSIGNED8 sentId := rawsents.sentId;

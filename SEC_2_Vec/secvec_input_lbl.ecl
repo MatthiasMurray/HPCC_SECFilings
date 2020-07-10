@@ -50,8 +50,8 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
         SELF.filingDate := r.filingDate;
         //SELF.reportPeriod := r.reportPeriod;
         //SELF.is_smallbiz := r.is_smallbiz;
-        SELF.pubfloat := r.pubfloat;
-        SELF.wellknown := r.wellknown;
+        //SELF.pubfloat := r.pubfloat;
+        //SELF.wellknown := r.wellknown;
         //SELF.shell := r.shell;
         //SELF.centralidxkey := r.centralidxkey;
         //SELF.amendflag := r.amendflag;
@@ -59,7 +59,7 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
         //SELF.fyfocus := r.fyfocus;
         //SELF.fpfocus := r.fpfocus;
         //SELF.emerging := r.emerging;
-        SELF.volfilers := r.volfilers;
+        //SELF.volfilers := r.volfilers;
         //SELF.currentstat := r.currentstat;
         //SELF.fyend := r.fyend;
         SELF.values := r.values;    
@@ -114,9 +114,9 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       UNICODE     filingDate;
       //UNICODE     reportPeriod;
       //UNICODE     is_smallbiz;
-      UNICODE     pubfloat;
+      //UNICODE     pubfloat;
     //UNICODE     comsharesout;
-      UNICODE     wellknown;
+      //UNICODE     wellknown;
       //UNICODE     shell;
       //UNICODE     centralidxkey;
       //UNICODE     amendflag;
@@ -125,7 +125,7 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       //UNICODE     fpfocus;
       //UNICODE     emerging;
     //UNICODE     ticker;
-      UNICODE     volfilers;
+      //UNICODE     volfilers;
       //UNICODE     currentstat;
       //UNICODE     fyend;
       DATASET(Entry_wlabel) values;
@@ -139,8 +139,8 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       SELF.filingDate := f.filingDate;
       //SELF.reportPeriod := f.reportPeriod;
       //SELF.is_smallbiz := f.is_smallbiz;
-      SELF.pubfloat := f.pubfloat;
-      SELF.wellknown := f.wellknown;
+      //SELF.pubfloat := f.pubfloat;
+      //SELF.wellknown := f.wellknown;
       //SELF.shell := f.shell;
       //SELF.centralidxkey := f.centralidxkey;
       //SELF.amendflag := f.amendflag;
@@ -148,7 +148,7 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       //SELF.fyfocus := f.fyfocus;
       //SELF.fpfocus := f.fpfocus;
       //SELF.emerging := f.emerging;
-      SELF.volfilers := f.volfilers;
+      //SELF.volfilers := f.volfilers;
       //SELF.currentstat := f.currentstat;
       //SELF.fyend := f.fyend;
       SELF.values := PROJECT(f.values,augment_entry(f,LEFT));

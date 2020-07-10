@@ -109,9 +109,9 @@ EXPORT Text_Tools := MODULE
             //SELF.reportPeriod     := lr.reportPeriod;
             //SELF.name             := lr.name;
             //SELF.is_smallbiz      := lr.is_smallbiz;
-            SELF.pubfloat         := lr.pubfloat;
+            //SELF.pubfloat         := lr.pubfloat;
             //SELF.comsharesout     := lr.comsharesout;
-            SELF.wellknown        := lr.wellknown;
+            //SELF.wellknown        := lr.wellknown;
             //SELF.shell            := lr.shell;
             //SELF.centralidxkey    := lr.centralidxkey;
             //SELF.amendflag        := lr.amendflag;
@@ -120,7 +120,7 @@ EXPORT Text_Tools := MODULE
             //SELF.fpfocus          := lr.fpfocus;
             //SELF.emerging         := lr.emerging;
             //SELF.ticker           := XMLUNICODE('dei:TradingSymbol');
-            SELF.volfilers        := lr.volfilers;
+            //SELF.volfilers        := lr.volfilers;
             //SELF.currentstat      := lr.currentstat;
             //SELF.fyend            := lr.fyend;
             SELF.filingDate       := 'N/A';    // only classic EDGAR
@@ -142,8 +142,8 @@ EXPORT Text_Tools := MODULE
         UNICODE filingDate;
         //UNICODE reportPeriod;
         //UNICODE is_smallbiz;
-        UNICODE pubfloat;
-        UNICODE wellknown;
+        //UNICODE pubfloat;
+        //UNICODE wellknown;
         //UNICODE shell;
         //UNICODE centralidxkey;
         //UNICODE amendflag;
@@ -151,7 +151,7 @@ EXPORT Text_Tools := MODULE
         //UNICODE fyfocus;
         //UNICODE fpfocus;
         //UNICODE emerging;
-        UNICODE volfilers;
+        //UNICODE volfilers;
         //UNICODE currentstat;
         //UNICODE fyend;
         STRING  label;
@@ -175,8 +175,8 @@ EXPORT Text_Tools := MODULE
             SELF.filingDate := f.filingDate;
             //SELF.reportPeriod := f.reportPeriod;
             //SELF.is_smallbiz := f.is_smallbiz;
-            SELF.pubfloat := f.pubfloat;
-            SELF.wellknown := f.wellknown;
+            //SELF.pubfloat := f.pubfloat;
+            //SELF.wellknown := f.wellknown;
             //SELF.shell := f.shell;
             //SELF.centralidxkey := f.centralidxkey;
             //SELF.amendflag := f.amendflag;
@@ -184,7 +184,7 @@ EXPORT Text_Tools := MODULE
             //SELF.fyfocus := f.fyfocus;
             //SELF.fpfocus := f.fpfocus;
             //SELF.emerging := f.emerging;
-            SELF.volfilers := f.volfilers;
+            //SELF.volfilers := f.volfilers;
             //SELF.currentstat := f.currentstat;
             //SELF.fyend := f.fyend;
             SELF.label := grablabel(f.fileName);

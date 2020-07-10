@@ -1,3 +1,4 @@
+IMPORT * FROM SEC_2_Vec;
 IMPORT * FROM SEC_2_Vec.sentiment;
 IMPORT * FROM ML_Core;
 IMPORT TextVectors as tv;
@@ -13,7 +14,9 @@ trainrec := sent_model.trainrec;
 //path := '~ncf::edgarfilings::raw::labels_allsecs_all';
 path := '~ncf::edgarfilings::raw::plainlabel_allsecs_all';
 
-dat := sent_model.trndata_wlbl(path,TRUE,'s&p');
+tsents := secvec_input_lbl(path,TRUE,'s&p');
+//dat := sent_model.trndata_wlbl(path,TRUE,'s&p');
+dat := sent_model.trndata_wlbl(tsents);
 
 dat_vn_all := dat[1];
 van_0 := dat_vn_all(label='0');

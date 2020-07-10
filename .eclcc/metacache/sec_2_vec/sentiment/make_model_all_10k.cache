@@ -1,0 +1,8 @@
+<Cache hash="3275204131620305104">
+<Attr module="SEC_2_Vec.sentiment" name="make_model_all_10k">
+ <Depend module="SEC_2_Vec.sentiment" name="sent_model"/>
+ <Depend module="SEC_2_Vec" name="secvec_input_lbl"/>
+ <Depend module="std" name="str"/>
+ <Depend module="TextVectors" name="sentencevectors"/>
+</Attr>
+</Cache>

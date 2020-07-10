@@ -67,8 +67,50 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
 
     out_norm := TABLE(nds,tfnormrec);
 
-    //RETURN out_norm(tfidf_score != 0);
+    //experimental version that auto-collapses 0 scores
+    // tfnormrec_exp := RECORD
+    //   STRING word;
+    //   UNSIGNED8 sentId;
+    //   STRING sentence;
+    //   REAL8 tfidf_score;
+    // END;
+
+    // tfnormrec_exp tfscoreno0_T(normrec nr) := TRANSFORM
+    //   tscore := sp.tfidf(STD.Str.ToLowerCase(nr.word),nr.text);
+    //   SELF.word := IF(tscore=0,[{}],nr.word);
+    //   SELF.sentId := IF(tscore=0,[{}],nr.sentId);
+    //   SELF.sentence := IF(tscore=0,[{}],nr.sentence);
+    //   SELF.tfidf_score := IF(tscore=0,[{}],tscore);
+      //drow1 := PROJECT(nr,TRANSFORM(tfnormrec_exp,SELF.word := LEFT.word,
+                                                  // SELF.sentId := LEFT.sentId,
+                                                  // SELF.sentence := LEFT.text,
+                                                  // SELF.tfidf_score := sp.tfidf(STD.Str.ToLowerCase(LEFT.word),LEFT.text)));
+      //drow2 := DATASET([],tfnormrec_exp);
+      //SELF := IF(tscore!=0,drow1,drow2);
+    //END;
+
+    //out_norm_exp := PROJECT(nds,tfscoreno0_T(LEFT));
+
+    //RETURN out_norm(tfidf_score > 0.0);
+
+    //secondary experimental version that auto-collapses 0 scores, this time using ROLLUP syntax
+    // tfidf_allsort := SORT(out_norm,sentId);
+    // tfidf_sentgrp := GROUP(tfidf_allsort,sentId);
+    
+    // outrec := RECORDOF(out_norm);
+
+    // weirdrec := RECORD
+    //   DATASET(outrec) non0rows;
+    // END;
+
+    // weirdrec no0grps_T(outrec l,DATASET(outrec) lr) := TRANSFORM
+    //   SELF.non0rows := lr(tfidf_score!=0);
+    // END;
+
+    // tfidf_no0s := ROLLUP(tfidf_sentgrp,GROUP,no0grps_T(LEFT,ROWS(LEFT)));
+    
     RETURN out_norm;
+    //RETURN tfidf_no0s;
   END;
 
   //norm version of vector/tfidf join
@@ -192,8 +234,12 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
   EXPORT sembed_grp_experimental := FUNCTION
     svb_cpy := sent_vecs_byword_norm;
     
-    svb_no0 := svb_cpy(tfidf_score>0);
-    
+    //svb_no0 := svb_cpy(tfidf_score>0);
+    //svb_no0 := svb_cpy(tfidf_score>0.0);
+    //svb_no0 := svb_cpy(tfidf_score>0);
+    //trying without removing 0s...
+    svb_no0 := svb_cpy;
+
     svb_ordered := SORT(svb_no0,svb_no0.sentId);
     svb_grp := GROUP(svb_ordered,sentId);
 

@@ -28,9 +28,9 @@ EXPORT Extract_Layout_modified := MODULE
     UNICODE     filingDate;
     //UNICODE     reportPeriod;
     //UNICODE     is_smallbiz;
-    UNICODE     pubfloat;
+    //UNICODE     pubfloat;
     //UNICODE     comsharesout;
-    UNICODE     wellknown;
+    //UNICODE     wellknown;
     //UNICODE     shell;
     //UNICODE     centralidxkey;
     //UNICODE     amendflag;
@@ -39,7 +39,7 @@ EXPORT Extract_Layout_modified := MODULE
     //UNICODE     fpfocus;
     //UNICODE     emerging;
     //UNICODE     ticker;
-    UNICODE     volfilers;
+    //UNICODE     volfilers;
     //UNICODE     currentstat;
     //UNICODE     fyend;
     DATASET(Entry_clean) values;
