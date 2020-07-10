@@ -29,6 +29,49 @@ EXPORT sent_model := MODULE
         STRING fname;
     END;
 
+    EXPORT trn10q10klbl_van(DATASET(sveclblrec) rawsents) := FUNCTION
+        rawrec := RECORD
+            UNSIGNED8 sentId := rawsents.sentId;
+            STRING text := rawsents.text;
+        END;
+
+        outlblrec := RECORD
+            UNSIGNED8 sentId := rawsents.sentId;
+            STRING label := rawsents.label;
+            STRING fname := rawsents.fname;
+        END;
+
+        trainSentences := TABLE(rawsents,rawrec);
+        labelSentences := TABLE(rawsents,outlblrec);
+
+        sv := tv.SentenceVectors();
+        model := sv.GetModel(trainSentences);
+        vanstart := model(typ=2);
+        vanrec := RECORD
+            UNSIGNED8 sentId := vanstart.id;
+            STRING text := vanstart.text;
+            tv.Types.t_Vector vec := vanstart.vec;
+        END;
+        vands := TABLE(vanstart,vanrec);
+
+        smodrec := RECORD
+            UNSIGNED8 sentId;
+            STRING text;
+            tv.Types.t_Vector vec;
+        END;
+
+        trainrec lrT(smodrec s,DATASET(outlblrec) r) := TRANSFORM
+            SELF.id := s.sentId;
+            SELF.text := s.text;
+            SELF.vec := s.vec;
+            SELF.label := r(sentId = s.sentId)[1].label;
+            SELF.fname := r(sentId = s.sentId)[1].fname;
+        END;
+
+        vanout := PROJECT(vands,lrT(LEFT,labelSentences));
+
+        RETURN vanout;
+    END;
     //EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING comparedto='plain') := FUNCTION
     //EXPORT trndata_wlbl (STRING path,BOOLEAN labelnames=TRUE,STRING approach='vanilla') := FUNCTION
     EXPORT trndata_wlbl(DATASET(sveclblrec) rawsents) := FUNCTION

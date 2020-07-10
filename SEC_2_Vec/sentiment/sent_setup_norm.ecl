@@ -235,10 +235,10 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     svb_cpy := sent_vecs_byword_norm;
     
     //svb_no0 := svb_cpy(tfidf_score>0);
-    //svb_no0 := svb_cpy(tfidf_score>0.0);
+    svb_no0 := svb_cpy(tfidf_score>0.0);
     //svb_no0 := svb_cpy(tfidf_score>0);
     //trying without removing 0s...
-    svb_no0 := svb_cpy;
+    //svb_no0 := svb_cpy;
 
     svb_ordered := SORT(svb_no0,svb_no0.sentId);
     svb_grp := GROUP(svb_ordered,sentId);

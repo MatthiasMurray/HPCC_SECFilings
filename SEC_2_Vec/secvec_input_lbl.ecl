@@ -4,20 +4,27 @@ IMPORT * FROM EDGAR_Extract.Text_Tools;
 mainrec := EDGAR_Extract.Extract_Layout_modified.Main;
 
 
-EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto='plain') := FUNCTION
-    start := XBRL_HTML_File(inpath);
+//EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto='plain') := FUNCTION
+EXPORT secvec_input_lbl(STRING inpath10q,STRING inpath10k,BOOLEAN prelabeled=TRUE,STRING comparedto='plain') := FUNCTION
+    //start := XBRL_HTML_File(inpath);
+    start10q := XBRL_HTML_File(inpath10q);
+    start10k := XBRL_HTML_File(inpath10k);
+
+    strec := RECORDOF(start10q);
     
-    compjoin(DATASET(RECORDOF(start)) st) := FUNCTION
+    compjoin(DATASET(strec) stq,DATASET(strec) stk) := FUNCTION
       //path := '~ncf::edgarfilings::supp::labelguide_sp_medium::labelguide.csv';
       //path := '~ncf::edgarfilings::raw::labels_allsecs_all';
       //path := '~ncf::edgarfilings::supp::labelguide_full';
-      path := '~ncf::edgarfilings::supp::sp_labels_all';
+      path10q := '~ncf::edgarfilings::supp::sp_labels_all';
+      path10k := '~ncf::edgarfilings::supp::labelguide_all_10k';
 
       csvrec := RECORD
         STRING plainname;
         STRING spname;
       END;
-      draw := DATASET(path,csvrec,CSV(HEADING(1)));
+      draw10q := DATASET(path10q,csvrec,CSV(HEADING(1)));
+      draw10k := DATASET(path10k,csvrec,CSV(HEADING(1)));
       // RECORDOF(start) j_T(RECORDOF(start) st,RECORDOF(ds) d) := TRANSFORM
       //   SELF.filename := d.spname;
       //   SELF.accessionNumber := st.accessionNumber;
@@ -27,11 +34,15 @@ EXPORT secvec_input_lbl(STRING inpath,BOOLEAN prelabeled=TRUE,STRING comparedto=
       //   SELF.volfilers := st.volfilers;
       //   SELF.values := st.values;
       // END;
-      cj := JOIN(st,draw,LEFT.filename = RIGHT.plainname,TRANSFORM(RECORDOF(st),SELF.filename:=RIGHT.spname,SELF:=LEFT));
+      cj10q := JOIN(stq,draw10q,LEFT.filename = RIGHT.plainname,TRANSFORM(RECORDOF(stq),SELF.filename:=RIGHT.spname,SELF:=LEFT));
+      cj10k := JOIN(stk,draw10k,LEFT.filename = RIGHT.plainname,TRANSFORM(RECORDOF(stk),SELF.filename:=RIGHT.spname,SELF:=LEFT));
+      
+      cj := cj10q + cj10k;
+
       RETURN cj;
     END;
     
-    plain := IF(comparedto='plain',start,compjoin(start));
+    plain := IF(comparedto='plain',start10q+start10k,compjoin(start10q,start10k));
 
     STRING addfakelabels(STRING inName,STRING strlbl) := FUNCTION
         splitname := STD.Str.SplitWords(inName, '_', FALSE);

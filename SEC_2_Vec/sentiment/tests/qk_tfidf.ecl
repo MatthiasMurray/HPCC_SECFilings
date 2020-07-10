@@ -8,8 +8,8 @@ IMPORT tv.Types;
 srec := sentiment.sent_model.sveclblrec;
 modrec := Types.TextMod;
 
-sents := DATASET(WORKUNIT('W20200708-185335','Result 1'),srec);
-model := DATASET(WORKUNIT('W20200708-185335','Result 2'),modrec);
+sents := DATASET(WORKUNIT('W20200710-041732','Result 1'),srec);
+model := DATASET(WORKUNIT('W20200710-041732','Result 2'),modrec);
 
 tsents := PROJECT(sents,TRANSFORM(Types.Sentence,SELF.sentId := LEFT.sentId,SELF.text := LEFT.text));
 //tsents_small := tsents(sentId%10=0);

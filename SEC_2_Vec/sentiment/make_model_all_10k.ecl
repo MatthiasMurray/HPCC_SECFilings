@@ -40,18 +40,50 @@ k_in10qk := rsentsk(get_tick(TRIM(fname,ALL)) IN ticksqk);
 //rsents := rsentsk + q_in10k;
 rsents := k_in10qk + q_in10k;
 
-trainsentrec := RECORD
-    UNSIGNED8 sentId := rsents.sentId;
+// trainsentrec := RECORD
+//     UNSIGNED8 sentId := rsents.sentId;
+//     STRING text := rsents.text;
+// END;
+
+trainrec_test := RECORD
+    UNSIGNED8 sentId := 0;
     STRING text := rsents.text;
+    STRING label := rsents.label;
+    STRING fname := rsents.fname;
 END;
 
-trainsents := TABLE(rsents,trainsentrec);
+trainsents1 := TABLE(rsents,trainrec_test);
+trsrec := RECORDOF(trainsents1);
+
+trsrec idx_T(trsrec l,trsrec r) := TRANSFORM
+    SELF.sentId := l.sentId + 1;
+    SELF.text := r.text;
+    SELF.label := r.label;
+    SELF.fname := r.fname;
+END;
+
+lbltrainsents := ITERATE(trainsents1,idx_T(LEFT,RIGHT));
+
+trec := RECORD
+    UNSIGNED8 sentId := lbltrainsents.sentId;
+    STRING text := lbltrainsents.text;
+END;
+
+trainsents := TABLE(lbltrainsents,trec);
 
 sv := tv.SentenceVectors();
 mod := sv.GetModel(trainsents);
 
-OUTPUT(rsents,ALL);
+trec_traindat := JOIN(lbltrainsents,mod(typ=2),LEFT.sentId=RIGHT.id,
+                            TRANSFORM(trainrec,SELF.id := RIGHT.id,
+                                                SELF.text := LEFT.text,
+                                                SELF.vec := RIGHT.vec,
+                                                SELF.label := LEFT.label,
+                                                SELF.fname := LEFT.fname));
+
+//OUTPUT(lbltrainsents,ALL);
 OUTPUT(mod,ALL);
+OUTPUT(trec_traindat,ALL);
 
 //dat := sent_model.trndata_wlbl(rsents);
 
