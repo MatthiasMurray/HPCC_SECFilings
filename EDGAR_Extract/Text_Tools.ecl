@@ -433,4 +433,16 @@ EXPORT Text_Tools := MODULE
 
         // RETURN fix2;
     END;
+
+    EXPORT get_tick(STRING f) := FUNCTION
+        parts := STD.Str.SplitWords(f,'_',FALSE);
+        RETURN parts[1];
+    END;
+
+    EXPORT get_label(STRING f) := FUNCTION
+        parts := STD.Str.SplitWords(f,'_',FALSE);
+        l_xml := parts[4];
+        label := STD.Str.SplitWords(l_xml,'.',FALSE)[1];
+        RETURN label;
+    END;
 END;

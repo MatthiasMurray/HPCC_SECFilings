@@ -7,7 +7,7 @@ docsim := similarity.docsim;
 
 trainrec := sentiment.sent_model.trainrec;
 
-EXPORT simlabs(DATASET(trainrec) traindat) := MODULE
+EXPORT simlabs(DATASET(trainrec) traindat,STRING method='add') := MODULE
     EXPORT get_ticker(STRING f) := FUNCTION
         parts := STD.Str.SplitWords(f,'_',FALSE);
         tick := parts[1];
@@ -64,10 +64,10 @@ EXPORT simlabs(DATASET(trainrec) traindat) := MODULE
             SELF.sid := L.sid + 1;
             SELF.fname := r.fname;
             SELF.ticker := r.ticker;
-            SELF.similarity := IF(l.ticker = r.ticker,docsim(dat_from_name(l.fname),dat_from_name(r.fname)),r.similarity);
+            SELF.similarity := IF(l.ticker = r.ticker,docsim(dat_from_name(l.fname),dat_from_name(r.fname),method),r.similarity);
         END;
 
-        out := ITERATE(starter,successive_sim_T(LEFT,RIGHT));
+        out := ITERATE(starter,successive_sim_T(LEFT,RIGHT),LOCAL);
         RETURN out;
     END;
 

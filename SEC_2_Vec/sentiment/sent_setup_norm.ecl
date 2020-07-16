@@ -55,38 +55,59 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
                                               SELF.text := docus[COUNTER].text));
 
   //Redoing tfidf calculation for NORMALIZED form
+  EXPORT tfnormrec := RECORD
+    STRING word;
+    UNSIGNED8 sentId;
+    STRING sentence;
+    REAL8 tfidf_score;
+  END;
+
+  EXPORT wrec := RECORD
+    STRING word;
+    UNSIGNED8 sentId;
+    STRING text;
+    REAL8 tfidf_score;
+    t_Vector w_Vector;
+  END;
+  
   EXPORT tfidf_norm := FUNCTION
     nds := normed_ds;
 
-    tfnormrec := RECORD
-      STRING word := nds.word;
-      UNSIGNED8 sentId := nds.sentId;
-      STRING sentence := nds.text;
-      REAL8 tfidf_score := sp.tfidf(STD.Str.ToLowerCase(nds.word),nds.text);
-    END;
-
-    out_norm := TABLE(nds,tfnormrec);
-
-    //experimental version that auto-collapses 0 scores
-    // tfnormrec_exp := RECORD
-    //   STRING word;
-    //   UNSIGNED8 sentId;
-    //   STRING sentence;
-    //   REAL8 tfidf_score;
+    // tfnormrec_table := RECORD
+    //   STRING word := nds.word;
+    //   UNSIGNED8 sentId := nds.sentId;
+    //   STRING sentence := nds.text;
+    //   REAL8 tfidf_score := sp.tfidf(STD.Str.ToLowerCase(nds.word),nds.text);
     // END;
 
-    // tfnormrec_exp tfscoreno0_T(normrec nr) := TRANSFORM
-    //   tscore := sp.tfidf(STD.Str.ToLowerCase(nr.word),nr.text);
-    //   SELF.word := IF(tscore=0,[{}],nr.word);
-    //   SELF.sentId := IF(tscore=0,[{}],nr.sentId);
-    //   SELF.sentence := IF(tscore=0,[{}],nr.sentence);
-    //   SELF.tfidf_score := IF(tscore=0,[{}],tscore);
-      //drow1 := PROJECT(nr,TRANSFORM(tfnormrec_exp,SELF.word := LEFT.word,
-                                                  // SELF.sentId := LEFT.sentId,
-                                                  // SELF.sentence := LEFT.text,
-                                                  // SELF.tfidf_score := sp.tfidf(STD.Str.ToLowerCase(LEFT.word),LEFT.text)));
-      //drow2 := DATASET([],tfnormrec_exp);
-      //SELF := IF(tscore!=0,drow1,drow2);
+    // out_norm := TABLE(nds,tfnormrec_table);
+
+    //experimental version that auto-collapses 0 scores
+    tfnormrec_exp := RECORD
+      STRING word;
+      UNSIGNED8 sentId;
+      STRING sentence;
+      REAL8 tfidf_score;
+    END;
+
+    tfnormrec_exp tfscoreno0_T(normrec nr) := TRANSFORM
+      tscore := sp.tfidf(STD.Str.ToLowerCase(nr.word),nr.text);
+      int_ts0 := TRUNCATE(tscore/50.0);
+      SELF.word := IF(int_ts0=0,SKIP,nr.word);
+      SELF.sentId := IF(int_ts0=0,SKIP,nr.sentId);
+      SELF.sentence := IF(int_ts0=0,SKIP,nr.text);
+      SELF.tfidf_score := IF(int_ts0=0,SKIP,tscore);
+    END;
+      // drow1 := PROJECT(nr,TRANSFORM(tfnormrec_exp,SELF.word := LEFT.word,
+      //                                             SELF.sentId := LEFT.sentId,
+      //                                             SELF.sentence := LEFT.text,
+      //                                             SELF.tfidf_score := sp.tfidf(STD.Str.ToLowerCase(LEFT.word),LEFT.text)));
+      // drow2 := DATASET([],tfnormrec_exp);
+      // SELF := IF(tscore!=0,drow1,drow2);
+      // SELF.word := drow.word;
+      // SELF.sentId := drow.sentId;
+      // SELF.sentence := drow.text;
+      // SELF.tfidf_score := drow.tfidf_score;
     //END;
 
     //out_norm_exp := PROJECT(nds,tfscoreno0_T(LEFT));
@@ -109,6 +130,8 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
 
     // tfidf_no0s := ROLLUP(tfidf_sentgrp,GROUP,no0grps_T(LEFT,ROWS(LEFT)));
     
+    out_norm := PROJECT(nds,tfscoreno0_T(LEFT));
+
     RETURN out_norm;
     //RETURN tfidf_no0s;
   END;
@@ -127,7 +150,15 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
 
     wordvec_simp := TABLE(mod,w2v);
 
-    combo := JOIN(wordvec_simp,tfidf_norm,STD.Str.ToLowerCase(LEFT.word) = STD.Str.ToLowerCase(RIGHT.word));
+    wrec att_vec_T(tfnormrec tfn) := TRANSFORM
+      SELF.w_Vector := wordvec_simp(STD.Str.ToLowerCase(word) = STD.Str.ToLowerCase(tfn.word))[1].vec;
+      SELF.text := tfn.sentence;
+      SELF := tfn;
+    END;
+
+    combo := PROJECT(tfidf_norm,att_vec_T(LEFT));
+
+    //combo := JOIN(wordvec_simp,tfidf_norm,STD.Str.ToLowerCase(LEFT.word) = STD.Str.ToLowerCase(RIGHT.word));
     RETURN combo;
   END;
 
@@ -158,9 +189,9 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     weightrec := RECORD
       STRING word := twn.word;
       UNSIGNED8 sentId := twn.sentId;
-      STRING text := twn.sentence;
+      STRING text := twn.text;
       REAL8 tfidf_score := twn.tfidf_score;
-      t_Vector w_Vector := vecmult(twn.vec,twn.tfidf_score);
+      t_Vector w_Vector := vecmult(twn.w_Vector,twn.tfidf_score);
     END;
 
     weighted := TABLE(twn,weightrec);
@@ -184,14 +215,6 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
       wout[i] = vv1[i]+vv2[i];
     }
   ENDC++;
-
-  EXPORT wrec := RECORD
-    STRING word;
-    UNSIGNED8 sentId;
-    STRING text;
-    REAL8 tfidf_score;
-    t_Vector w_Vector;
-  END;
 
   EXPORT absmaxmin(t_Vector v) := FUNCTION
     vecasds := DATASET(v,{REAL8 val});
@@ -235,29 +258,30 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
     svb_cpy := sent_vecs_byword_norm;
     
     //svb_no0 := svb_cpy(tfidf_score>0);
-    svb_no0 := svb_cpy(tfidf_score>0.0);
+    //svb_no0 := svb_cpy(tfidf_score>0.0);
     //svb_no0 := svb_cpy(tfidf_score>0);
     //trying without removing 0s...
-    //svb_no0 := svb_cpy;
+    svb_no0 := svb_cpy;
 
     svb_ordered := SORT(svb_no0,svb_no0.sentId);
     svb_grp := GROUP(svb_ordered,sentId);
+    //svb_sid := DEDUP(svb_no0,sentId);
 
-    svbrec := RECORDOF(svb_no0);
+    //svbrec := RECORDOF(svb_no0);
 
-    svbrec iter_vecs(svbrec l,svbrec r,INTEGER C) := TRANSFORM
+    wrec iter_vecs(wrec l,wrec r,INTEGER C) := TRANSFORM
       SELF.w_Vector := IF(C=1,r.w_Vector,addvecs(l.w_Vector,r.w_Vector));
       SELF := r;
     END;
 
-    t_Vector get_tot_vec(DATASET(svbrec) r) := FUNCTION
+    t_Vector get_tot_vec(DATASET(wrec) r) := FUNCTION
       itvecs := ITERATE(r,iter_vecs(LEFT,RIGHT,COUNTER),LOCAL);
       L_iter := COUNT(itvecs);
       totvec := itvecs[L_iter].w_Vector;
-      RETURN totvec;
+      RETURN tv.Internal.svUtils.normalizeVector(totvec);
     END;
 
-    svbrec grproll(svbrec L,DATASET(svbrec) R) := TRANSFORM
+    wrec grproll(wrec L,DATASET(wrec) R) := TRANSFORM
       SELF.word := L.word;
       SELF.sentId := L.sentId;
       SELF.text := L.text;
@@ -265,19 +289,28 @@ EXPORT sent_setup_norm(DATASET(Types.Sentence) tsents,DATASET(Types.TextMod) big
       SELF.w_Vector := get_tot_vec(R);
     END;
 
-    out_tot := UNGROUP(ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT))));
+    // wrec grpproj(wrec L) := TRANSFORM
+    //   SELF.word := L.word;
+    //   SELF.sentId := L.sentId;
+    //   SELF.text := L.text;
+    //   SELF.tfidf_score := L.tfidf_score;
+    //   SELF.w_Vector := get_tot_vec(svb_no0(sentId=L.sentId));
+    // END;
 
-    outrec := RECORDOF(out_tot);
+    out := ROLLUP(svb_grp,GROUP,grproll(LEFT,ROWS(LEFT)));
+    //out := PROJECT(svb_sid,grpproj(LEFT),LOCAL);
 
-    outrec norm_T(outrec d) := TRANSFORM
-      SELF.word := d.word;
-      SELF.sentId := d.sentId;
-      SELF.text := d.text;
-      SELF.tfidf_score := d.tfidf_score;
-      SELF.w_Vector := tv.Internal.svUtils.normalizeVector(d.w_Vector);
-    END;
+    //outrec := RECORDOF(out_tot);
 
-    out := PROJECT(out_tot,norm_T(LEFT));
+    // wrec norm_T(wrec d) := TRANSFORM
+    //   SELF.word := d.word;
+    //   SELF.sentId := d.sentId;
+    //   SELF.text := d.text;
+    //   SELF.tfidf_score := d.tfidf_score;
+    //   SELF.w_Vector := tv.Internal.svUtils.normalizeVector(d.w_Vector);
+    // END;
+
+    // out := PROJECT(out_tot,norm_T(LEFT));
 
     RETURN out;
   END;
